@@ -44,13 +44,13 @@ export default function NodalOfficerDashboard() {
   const [domainExpertiseInput, setDomainExpertiseInput] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Proposal Review Modal (Phase 6 Tier 3)
+  // Proposal Review Modal (Tier 3)
   const [reviewProposal, setReviewProposal] = useState(null);
   const [proposalDecision, setProposalDecision] = useState('approved');
   const [proposalFeedback, setProposalFeedback] = useState('');
   const [proposalReviewing, setProposalReviewing] = useState(false);
 
-  // Phase 9: Pilot Permits Modal
+  // Pilot Permits Modal
   const [pilotRequests, setPilotRequests] = useState([]);
   const [permitModal, setPermitModal] = useState(null);
   const [permitDecision, setPermitDecision] = useState('approved');
@@ -58,7 +58,7 @@ export default function NodalOfficerDashboard() {
   const [permitNotes, setPermitNotes] = useState('');
   const [permitSubmitting, setPermitSubmitting] = useState(false);
 
-  // Phase 10: Handover & Impact Modal
+  // Handover & Impact Modal
   const [handoverModal, setHandoverModal] = useState(null);
   const [beneficiaryCount, setBeneficiaryCount] = useState(2400);
   const [baselineMetric, setBaselineMetric] = useState('Water availability: 2 hrs/day');
@@ -305,7 +305,7 @@ export default function NodalOfficerDashboard() {
               </h1>
               <p className="text-secondary" style={{ maxWidth: 740, margin: 0 }}>
                 {user?.organization || 'Department of Drinking Water & Sanitation, Govt. of Jharkhand'}.
-                Verify public grievances (Phase 2), assign departmental priority (Phase 3), approve HEI claims (Phase 4), and grant Tier 3 ground pilot sanctions (Phase 6).
+                Verify community reports, set departmental priorities, approve university claims, and authorize field pilots.
               </p>
             </div>
 
@@ -328,7 +328,7 @@ export default function NodalOfficerDashboard() {
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#f59e0b', marginTop: 4 }}>
               {loading ? '—' : pendingQueue.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Phase 2: Screening Queue</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Screening Queue</div>
           </div>
 
           <div className="card p-6" style={{ borderLeft: '4px solid #10b981' }}>
@@ -336,7 +336,7 @@ export default function NodalOfficerDashboard() {
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10b981', marginTop: 4 }}>
               {loading ? '—' : verifiedQueue.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Phase 3: Prioritize & Publish</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Prioritize & Publish</div>
           </div>
 
           <div className="card p-6" style={{ borderLeft: '4px solid #818cf8' }}>
@@ -344,15 +344,15 @@ export default function NodalOfficerDashboard() {
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#818cf8', marginTop: 4 }}>
               {loading ? '—' : pendingClaims.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Phase 4: University Matching</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>University Matching</div>
           </div>
 
           <div className="card p-6" style={{ borderLeft: '4px solid #34d399' }}>
-            <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tier 3 Pilot Sanctions</span>
+            <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Pilot Sanctions</span>
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#34d399', marginTop: 4 }}>
               {loading ? '—' : pendingProposals.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Phase 6: Ground Deployment</div>
+            <div className="text-secondary" style={{ fontSize: '0.8rem', marginTop: 4 }}>Ground Deployment</div>
           </div>
         </div>
 
@@ -363,42 +363,42 @@ export default function NodalOfficerDashboard() {
             className={`btn ${activeTab === 'queue' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20 }}
           >
-            Phase 2: Verification Queue ({pendingQueue.length + needsInfoQueue.length})
+            Verification Queue ({pendingQueue.length + needsInfoQueue.length})
           </button>
           <button
             onClick={() => setActiveTab('verified')}
             className={`btn ${activeTab === 'verified' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20 }}
           >
-            Phase 3: Prioritize & Publish ({verifiedQueue.length})
+            Prioritize & Publish ({verifiedQueue.length})
           </button>
           <button
             onClick={() => setActiveTab('claims')}
             className={`btn ${activeTab === 'claims' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20, borderColor: '#818cf8', color: activeTab === 'claims' ? '#fff' : '#818cf8' }}
           >
-            Phase 4: University Claims ({pendingClaims.length})
+            University Claims ({pendingClaims.length})
           </button>
           <button
             onClick={() => setActiveTab('proposals')}
             className={`btn ${activeTab === 'proposals' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20, borderColor: '#34d399', color: activeTab === 'proposals' ? '#fff' : '#34d399' }}
           >
-            Phase 6: Proposal Sanctions ({pendingProposals.length})
+            Proposal Sanctions ({pendingProposals.length})
           </button>
           <button
             onClick={() => setActiveTab('pilots')}
             className={`btn ${activeTab === 'pilots' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20, borderColor: '#f59e0b', color: activeTab === 'pilots' ? '#fff' : '#f59e0b' }}
           >
-            Phase 9: Field Pilots ({pilotRequests.length})
+            Field Pilots ({pilotRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('impact')}
             className={`btn ${activeTab === 'impact' ? 'btn-primary' : 'btn-outline'}`}
             style={{ borderRadius: 20, borderColor: '#10b981', color: activeTab === 'impact' ? '#fff' : '#10b981' }}
           >
-            Phase 10: Handover & Impact
+            Handover & Impact
           </button>
           <button
             onClick={() => setActiveTab('all')}
@@ -422,7 +422,7 @@ export default function NodalOfficerDashboard() {
               <ShieldCheck size={48} style={{ color: '#34d399', margin: '0 auto 16px', opacity: 0.8 }} />
               <h3>No Proposals Awaiting Government Clearance</h3>
               <p className="text-secondary" style={{ maxWidth: 480, margin: '8px auto 0' }}>
-                Proposals will appear here once they have successfully passed Tier 1 (Faculty Academic Review) and Tier 2 (University Lab Endorsement).
+                Proposals will appear here once they have successfully passed faculty review and university endorsement.
               </p>
             </div>
           ) : (
@@ -432,8 +432,8 @@ export default function NodalOfficerDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                        <span className="badge badge-green">Tier 3: Final State Clearance</span>
-                        <span className="badge badge-purple">Tier 1 & 2 Approved ✓</span>
+                        <span className="badge badge-green">Government Review</span>
+                        <span className="badge badge-purple">Prior Reviews Complete ✓</span>
                         <span className="badge badge-blue">Squad: {p.Team?.name}</span>
                       </div>
                       <h3 style={{ fontSize: '1.35rem', margin: 0 }}>{p.title}</h3>
@@ -454,12 +454,12 @@ export default function NodalOfficerDashboard() {
                   {/* Multi-stakeholder endorsements summary */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, padding: 14, background: 'var(--bg-secondary)', borderRadius: 8, fontSize: '0.85rem' }}>
                     <div>
-                      <strong style={{ color: '#818cf8' }}>Tier 1 Faculty Review:</strong>
+                      <strong style={{ color: '#818cf8' }}>Faculty Review:</strong>
                       <p style={{ margin: '4px 0 0' }}>{p.facultyFeedback || 'Academic & sensor design approved.'}</p>
                     </div>
 
                     <div>
-                      <strong style={{ color: '#c084fc' }}>Tier 2 University Endorsement:</strong>
+                      <strong style={{ color: '#c084fc' }}>University Endorsement:</strong>
                       <p style={{ margin: '4px 0 0' }}>{p.universityFeedback || 'Lab resources & hardware safety confirmed.'}</p>
                     </div>
 
@@ -571,7 +571,7 @@ export default function NodalOfficerDashboard() {
               <Rocket size={48} style={{ color: '#f59e0b', margin: '0 auto 16px', opacity: 0.8 }} />
               <h3>No Pending Field Pilot Requests</h3>
               <p className="text-secondary" style={{ maxWidth: 480, margin: '8px auto 0' }}>
-                Student teams will request official government field pilot permits once their prototypes have passed Phase 8 Expert Rubric Certification.
+                Student teams will request official government field pilot permits once their prototypes have passed Expert Rubric Certification.
               </p>
             </div>
           ) : (
@@ -581,7 +581,7 @@ export default function NodalOfficerDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                        <span className="badge badge-amber">Phase 9: Field Pilot Request</span>
+                        <span className="badge badge-amber">Field Pilot Request</span>
                         <span className="badge badge-blue">Team: {sol.Team?.name}</span>
                         {sol.pilotPermitGranted ? (
                           <span className="badge badge-emerald">Permit Granted: {sol.pilotPermitNumber}</span>
@@ -865,7 +865,7 @@ export default function NodalOfficerDashboard() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span className="badge badge-green">Tier 3: Government Sanction</span>
+                <span className="badge badge-green">Government Sanction</span>
                 <span className="badge badge-cyan">Ground Pilot Clearance</span>
               </div>
 
@@ -1108,7 +1108,7 @@ export default function NodalOfficerDashboard() {
           </div>
         )}
 
-        {/* Phase 9: Modal - Issue Field Pilot Permit */}
+        {/* Modal - Issue Field Pilot Permit */}
         {permitModal && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1124,7 +1124,7 @@ export default function NodalOfficerDashboard() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span className="badge badge-amber">Phase 9: Government Pilot Clearance</span>
+                <span className="badge badge-amber">Government Pilot Clearance</span>
                 <span className="badge badge-emerald">Field Permit Authorization</span>
               </div>
 
@@ -1199,7 +1199,7 @@ export default function NodalOfficerDashboard() {
           </div>
         )}
 
-        {/* Phase 10: Modal - Officially Mark Implemented & Handover */}
+        {/* Modal - Officially Mark Implemented & Handover */}
         {handoverModal && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1215,7 +1215,7 @@ export default function NodalOfficerDashboard() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span className="badge badge-emerald">Phase 10: Impact Certification</span>
+                <span className="badge badge-emerald">Impact Certification</span>
                 <span className="badge badge-purple">Official Department Handover</span>
               </div>
 

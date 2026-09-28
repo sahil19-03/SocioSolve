@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
 
 import Home from './pages/Home';
 import Explore from './pages/Explore';
@@ -33,6 +34,7 @@ export default function App() {
       <Sidebar />
       <div className="app-main">
         <TopHeader />
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/explore" element={<Explore />} />
@@ -43,8 +45,8 @@ export default function App() {
 
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/submit-challenge" element={<ProtectedRoute><SubmitChallenge /></ProtectedRoute>} />
-          <Route path="/submit-solution" element={<ProtectedRoute><SubmitSolution /></ProtectedRoute>} />
-          <Route path="/team-formation" element={<ProtectedRoute><TeamFormation /></ProtectedRoute>} />
+          <Route path="/submit-solution" element={<ProtectedRoute allowedRoles={['student', 'admin']}><SubmitSolution /></ProtectedRoute>} />
+          <Route path="/team-formation" element={<ProtectedRoute allowedRoles={['student', 'faculty', 'university_admin', 'admin']}><TeamFormation /></ProtectedRoute>} />
 
           <Route path="/dashboard/student" element={<ProtectedRoute allowedRoles={['student','admin']}><StudentDashboard /></ProtectedRoute>} />
           <Route path="/dashboard/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
@@ -56,7 +58,7 @@ export default function App() {
 
           <Route path="/industry" element={<ProtectedRoute allowedRoles={['industry_partner','admin']}><IndustryPortal /></ProtectedRoute>} />
           <Route path="/milestones" element={<ProtectedRoute><MilestoneTracker /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute allowedRoles={['admin']}><Analytics /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

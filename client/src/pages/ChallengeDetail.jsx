@@ -5,14 +5,25 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
   Users, Lightbulb, MapPin, Calendar, Clock, Share2, 
-  ExternalLink, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2 
+  ExternalLink, ThumbsUp, MessageSquare, ShieldCheck, CheckCircle2, ArrowLeft
 } from 'lucide-react';
+
+const PROGRESS_LABELS = {
+  pending: 'Awaiting review', submitted: 'Submitted for review',
+  under_review: 'Under review', needs_information: 'More information requested',
+  verified: 'Verified', published: 'Open for university teams',
+  assigned: 'University team assigned', converted_to_project: 'In development',
+  solved: 'Implemented', archived: 'Archived', rejected: 'Not approved', duplicate: 'Marked as duplicate',
+};
 
 export default function ChallengeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, getDashboardPath } = useAuth();
   const toast = useToast();
+  const isStudent = user?.role === 'student';
+  const canTakeAction = isStudent || ['faculty', 'expert'].includes(user?.role);
+  const canViewTeamDossier = ['student', 'faculty', 'university_admin', 'admin'].includes(user?.role);
 
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -150,13 +161,20 @@ export default function ChallengeDetail() {
         borderBottom: '1px solid var(--border-color)'
       }}>
         <div className="container">
+          <Link
+            to={isLoggedIn ? getDashboardPath() : '/'}
+            className="btn btn-ghost btn-sm challenge-detail-back"
+          >
+            <ArrowLeft size={16} /> Back to dashboard
+          </Link>
+
           {/* Metadata badges strip */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
             <span className="badge badge-blue">{utils.categoryLabel(challenge.category)}</span>
             <span className={`badge ${utils.difficultyBadge(challenge.difficulty)}`}>
               {challenge.difficulty.toUpperCase()}
             </span>
-            <span className="badge badge-emerald">STATUS: {challenge.status.toUpperCase()}</span>
+            <span className="badge badge-emerald">{PROGRESS_LABELS[challenge.status] || 'Progress updated'}</span>
             <span style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Clock size={14} /> Posted {utils.timeAgo(challenge.createdAt)}
             </span>
@@ -193,12 +211,12 @@ export default function ChallengeDetail() {
       </section>
 
       {/* ─── Main Content Grid ─── */}
-      <main className="container" style={{ padding: '40px 0 80px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 36, alignItems: 'start' }}>
+      <main className="container challenge-detail-container" style={{ padding: '40px 0 80px' }}>
+        <div className="challenge-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 340px)', gap: 28, alignItems: 'start' }}>
           {/* Left Column: Tabs */}
           <div>
             {/* Tab Buttons */}
-            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--border-color)', marginBottom: 28 }}>
+            <div className="challenge-detail-tabs" style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--border-color)', marginBottom: 28, overflowX: 'auto' }}>
               <button 
                 onClick={() => setActiveTab('overview')}
                 className={`btn btn-ghost ${activeTab === 'overview' ? 'text-primary' : ''}`}
@@ -287,9 +305,11 @@ export default function ChallengeDetail() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <h3 style={{ fontSize: '1.3rem' }}>Proposed Solutions</h3>
-                  <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-primary btn-sm">
-                    🚀 Submit Solution
-                  </Link>
+                  {isStudent && (
+                    <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-primary btn-sm">
+                      🚀 Submit Solution
+                    </Link>
+                  )}
                 </div>
 
                 {solutions.length > 0 ? (
@@ -373,12 +393,14 @@ export default function ChallengeDetail() {
                   <div className="card p-8 text-center">
                     <Lightbulb size={40} color="#60a5fa" style={{ margin: '0 auto 12px' }} />
                     <h4>No Solutions Yet</h4>
-                    <p className="text-secondary" style={{ marginBottom: 20 }}>
-                      Be the first student team to build and submit a prototype for this challenge.
+                    <p className="text-secondary" style={{ marginBottom: isStudent ? 20 : 0 }}>
+                      {isStudent ? 'Be the first student team to build and submit a prototype for this challenge.' : 'Student teams have not submitted a solution yet.'}
                     </p>
-                    <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-primary btn-sm">
-                      Submit Your Solution
-                    </Link>
+                    {isStudent && (
+                      <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-primary btn-sm">
+                        Submit Your Solution
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
@@ -389,9 +411,11 @@ export default function ChallengeDetail() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <h3 style={{ fontSize: '1.3rem' }}>Active Teams</h3>
-                  <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-secondary btn-sm">
-                    👥 Form / Join Team
-                  </Link>
+                  {isStudent && (
+                    <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-secondary btn-sm">
+                      👥 Form / Join Team
+                    </Link>
+                  )}
                 </div>
 
                 {teams.length > 0 ? (
@@ -412,9 +436,11 @@ export default function ChallengeDetail() {
                             )}
                           </div>
                         </div>
-                        <Link to={`/team-formation?teamId=${t.id}`} className="btn btn-outline btn-sm">
-                          View Team
-                        </Link>
+                        {canViewTeamDossier && (
+                          <Link to={`/team-formation?teamId=${t.id}`} className="btn btn-outline btn-sm">
+                            View Team
+                          </Link>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -422,12 +448,14 @@ export default function ChallengeDetail() {
                   <div className="card p-8 text-center">
                     <Users size={40} color="#60a5fa" style={{ margin: '0 auto 12px' }} />
                     <h4>No Teams Formed Yet</h4>
-                    <p className="text-secondary" style={{ marginBottom: 20 }}>
-                      Start a team and recruit teammates with the required skillsets.
+                    <p className="text-secondary" style={{ marginBottom: isStudent ? 20 : 0 }}>
+                      {isStudent ? 'Start a team and recruit teammates with the required skillsets.' : 'Students have not formed a team for this challenge yet.'}
                     </p>
-                    <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-secondary btn-sm">
-                      Form a Team
-                    </Link>
+                    {isStudent && (
+                      <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-secondary btn-sm">
+                        Form a Team
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
@@ -492,17 +520,19 @@ export default function ChallengeDetail() {
           {/* Right Column: Actions Sidebar */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Primary Action Card */}
-            <div className="card p-6">
+            {canTakeAction && <div className="card p-6">
               <h4 style={{ fontSize: '1.1rem', marginBottom: 16 }}>Take Action</h4>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-primary w-full">
-                  <Users size={16} /> Form / Join Team
-                </Link>
+                {isStudent && <>
+                  <Link to={`/team-formation?challengeId=${challenge.id}`} className="btn btn-primary w-full">
+                    <Users size={16} /> Form / Join Team
+                  </Link>
 
-                <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-secondary w-full">
-                  <Lightbulb size={16} /> Submit Solution
-                </Link>
+                  <Link to={`/submit-solution?challengeId=${challenge.id}`} className="btn btn-secondary w-full">
+                    <Lightbulb size={16} /> Submit Solution
+                  </Link>
+                </>}
 
                 {user?.role === 'faculty' && (
                   <button onClick={() => handleVolunteer('faculty')} className="btn btn-outline w-full">
@@ -516,7 +546,7 @@ export default function ChallengeDetail() {
                   </button>
                 )}
               </div>
-            </div>
+            </div>}
 
             {/* Submitter Profile Card */}
             <div className="card p-6">

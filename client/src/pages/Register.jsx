@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, ArrowRight, User, Mail, Lock, Building, GraduationCap, Award } from 'lucide-react';
+import { ArrowRight, User, Mail, Lock, Eye, EyeOff, Building, Globe, FileText } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [organization, setOrganization] = useState('');
   const [skills, setSkills] = useState('React, IoT, Python');
   const [state, setState] = useState('');
@@ -32,14 +33,14 @@ export default function Register() {
   const isInstitution = ['university_admin', 'industry_partner'].includes(role);
 
   const roles = [
-    { id: 'student',          title: 'Student Innovator',        icon: '🎓', desc: 'Discover challenges, form teams, build solutions' },
-    { id: 'citizen',          title: 'Problem Submitter',        icon: '🏛️', desc: 'Submit real challenges from your community or NGO' },
-    { id: 'nodal_officer',    title: 'Govt Nodal Officer',       icon: '🏛️', desc: 'Verify citizen problems, assign priority & publish to HEIs' },
-    { id: 'faculty',          title: 'Faculty Mentor',           icon: '📚', desc: 'Guide university teams with academic research' },
-    { id: 'expert',           title: 'Industry Expert',          icon: '⭐', desc: 'Evaluate solution feasibility and industry readiness' },
-    { id: 'university_admin', title: 'HEI Coordinator',          icon: '🏫', desc: 'Register your Higher Education Institution as a partner' },
-    { id: 'industry_partner', title: 'Industry Partner',         icon: '🤝', desc: 'Offer mentoring, funding, or prototyping support' },
-    { id: 'community',        title: 'Community Member',         icon: '🗳️', desc: 'Vote on solutions, follow challenges and track progress' },
+    { id: 'student',          title: 'Student Innovator',  icon: '🎓', desc: 'Discover challenges, build solutions' },
+    { id: 'citizen',          title: 'Problem Submitter',  icon: '📢', desc: 'Submit real civic & NGO problems' },
+    { id: 'nodal_officer',    title: 'Govt Nodal Officer', icon: '🏛️', desc: 'Verify, prioritize & route to HEIs' },
+    { id: 'faculty',          title: 'Faculty Mentor',     icon: '📚', desc: 'Guide university teams on R&D' },
+    { id: 'expert',           title: 'Domain Expert',      icon: '⭐', desc: 'Evaluate feasibility & readiness' },
+    { id: 'university_admin', title: 'HEI Coordinator',    icon: '🏫', desc: 'Manage institutional innovation cell' },
+    { id: 'industry_partner', title: 'Industry Partner',   icon: '🤝', desc: 'Sponsorship, mentoring & adoption' },
+    { id: 'community',        title: 'Community Member',   icon: '🗳️', desc: 'Follow challenges & vote on impact' },
   ];
 
   const handleSubmit = async (e) => {
@@ -48,7 +49,7 @@ export default function Register() {
 
     try {
       const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
-      const res = await register({
+      await register({
         name,
         email,
         password,
@@ -71,167 +72,282 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 72px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-      <div className="card" style={{ width: '100%', maxWidth: 640, padding: '40px 36px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="brand-icon" style={{ margin: '0 auto 16px', width: 44, height: 44, fontSize: '1.4rem' }}>⚡</div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: 8 }}>Join the SocioSolve Ecosystem</h2>
-          <p className="text-secondary" style={{ fontSize: '0.9rem' }}>
-            Select your primary role to customize your platform experience
+    <div className="auth-page-wrapper">
+      <div className="auth-ambient-glow" />
+
+      <div className="card auth-card auth-card--register">
+        {/* Brand & Emblem Header */}
+        <div className="auth-header">
+          <Link to="/" className="auth-brand-link" title="SocioSolve National Platform">
+            <div className="auth-logo-badge">
+              <img src="/logo.png" alt="SocioSolve Emblem" />
+            </div>
+            <div className="auth-brand-title">
+              Socio<span>Solve</span>
+            </div>
+            <span className="auth-brand-pill">
+              National Innovation Network
+            </span>
+          </Link>
+
+          <h1 className="auth-heading">Join the <span style={{ color: 'var(--color-primary-400)' }}>SocioSolve</span> Ecosystem</h1>
+          <p className="auth-lead">
+            Select your primary role to customize your platform experience and innovation tools
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Role Selection Cards */}
+          {/* Role Selection Grid */}
           <div className="form-group mb-6">
-            <label className="form-label">Select Your Role *</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginTop: 6 }}>
-              {roles.map((r) => (
-                <div 
-                  key={r.id}
-                  onClick={() => setRole(r.id)}
-                  style={{
-                    padding: '12px 10px',
-                    borderRadius: 'var(--radius-md)',
-                    border: role === r.id ? '1px solid var(--color-primary-500)' : '1px solid var(--border-color)',
-                    background: role === r.id ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    transition: 'var(--transition-fast)'
-                  }}
-                >
-                  <div style={{ fontSize: '1.4rem', marginBottom: 4 }}>{r.icon}</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: role === r.id ? 'var(--color-primary-400)' : 'var(--text-primary)' }}>
-                    {r.title}
+            <label className="form-label" style={{ fontSize: '0.92rem' }}>
+              Select Your Role <span style={{ color: 'var(--color-primary-400)' }}>*</span>
+            </label>
+            <div className="auth-role-grid">
+              {roles.map((r) => {
+                const isActive = role === r.id;
+                return (
+                  <div
+                    key={r.id}
+                    onClick={() => setRole(r.id)}
+                    className={`auth-role-item ${isActive ? 'auth-role-item--active' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setRole(r.id); }}
+                  >
+                    <div className="auth-role-icon">{r.icon}</div>
+                    <div className="auth-role-title">{r.title}</div>
+                    <div className="auth-role-desc">{r.desc}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Full Name */}
-          <div className="form-group mb-4">
-            <label className="form-label" htmlFor="regName">Full Name *</label>
-            <input 
-              id="regName"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Sahil Raj"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
+          {/* User Details Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {/* Full Name */}
+            <div className="form-group mb-4">
+              <label className="form-label" htmlFor="regName">Full Name *</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">
+                  <User size={18} />
+                </span>
+                <input
+                  id="regName"
+                  type="text"
+                  className="auth-input"
+                  placeholder="e.g. Sahil Raj"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
 
-          {/* Email */}
-          <div className="form-group mb-4">
-            <label className="form-label" htmlFor="regEmail">Email Address *</label>
-            <input 
-              id="regEmail"
-              type="email"
-              className="form-input"
-              placeholder="name@university.edu or domain.org"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            {/* Email */}
+            <div className="form-group mb-4">
+              <label className="form-label" htmlFor="regEmail">Email Address *</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">
+                  <Mail size={18} />
+                </span>
+                <input
+                  id="regEmail"
+                  type="email"
+                  className="auth-input"
+                  placeholder="name@university.edu or domain.org"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Password */}
-          <div className="form-group mb-4">
+          <div className="form-group mb-5">
             <label className="form-label" htmlFor="regPass">Password *</label>
-            <input 
-              id="regPass"
-              type="password"
-              className="form-input"
-              placeholder="Minimum 6 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon">
+                <Lock size={18} />
+              </span>
+              <input
+                id="regPass"
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="Minimum 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="auth-input-action"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {/* Role-specific fields */}
           {role === 'student' ? (
-            <div className="form-group mb-4">
+            <div className="form-group mb-5">
               <label className="form-label" htmlFor="skills">Technical Skills (Comma separated for AI Matching)</label>
               <input
-                id="skills" type="text" className="form-input"
+                id="skills"
+                type="text"
+                className="form-input"
                 placeholder="e.g. React, Node.js, Python, IoT, ML, Flutter"
-                value={skills} onChange={(e) => setSkills(e.target.value)}
+                value={skills}
+                onChange={(e) => setSkills(e.target.value)}
               />
-              <span className="text-muted" style={{ fontSize: '0.75rem' }}>Used by SocioSolve AI to compute match % for societal challenges.</span>
+              <span className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4, display: 'block' }}>
+                Used by SocioSolve AI to compute match % for societal challenges.
+              </span>
             </div>
           ) : isInstitution ? (
             <>
               <div className="form-group mb-4">
-                <label className="form-label" htmlFor="org">{role === 'university_admin' ? 'University / Institution Name *' : 'Company / Organisation Name *'}</label>
-                <input id="org" type="text" className="form-input"
-                  placeholder={role === 'university_admin' ? 'e.g. IIT Bombay' : 'e.g. TechVentures Pvt Ltd'}
-                  value={organization} onChange={(e) => setOrganization(e.target.value)} required
-                />
+                <label className="form-label" htmlFor="org">
+                  {role === 'university_admin' ? 'University / Institution Name *' : 'Company / Organisation Name *'}
+                </label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon">
+                    <Building size={18} />
+                  </span>
+                  <input
+                    id="org"
+                    type="text"
+                    className="auth-input"
+                    placeholder={role === 'university_admin' ? 'e.g. IIT Bombay' : 'e.g. TechVentures Pvt Ltd'}
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                 <div className="form-group mb-4">
                   <label className="form-label">Institution Type *</label>
-                  <select className="form-select" value={institutionType} onChange={(e) => setInstitutionType(e.target.value)} required>
+                  <select
+                    className="form-select"
+                    value={institutionType}
+                    onChange={(e) => setInstitutionType(e.target.value)}
+                    required
+                  >
                     <option value="">-- Select --</option>
-                    {role === 'university_admin'
-                      ? <option value="hei">Higher Education Institution (HEI)</option>
-                      : <>
-                          <option value="startup">Startup</option>
-                          <option value="msme">MSME</option>
-                          <option value="csr">CSR / Foundation</option>
-                          <option value="research_lab">Research Laboratory</option>
-                          <option value="govt">Government Agency</option>
-                          <option value="other">Other</option>
-                        </>
-                    }
+                    {role === 'university_admin' ? (
+                      <option value="hei">Higher Education Institution (HEI)</option>
+                    ) : (
+                      <>
+                        <option value="startup">Startup</option>
+                        <option value="msme">MSME</option>
+                        <option value="csr">CSR / Foundation</option>
+                        <option value="research_lab">Research Laboratory</option>
+                        <option value="govt">Government Agency</option>
+                        <option value="other">Other</option>
+                      </>
+                    )}
                   </select>
                 </div>
+
                 <div className="form-group mb-4">
                   <label className="form-label">State *</label>
-                  <select className="form-select" value={state} onChange={(e) => setState(e.target.value)} required>
+                  <select
+                    className="form-select"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    required
+                  >
                     <option value="">Select State</option>
-                    {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    {INDIAN_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                 <div className="form-group mb-4">
                   <label className="form-label" htmlFor="website">Website</label>
-                  <input id="website" type="url" className="form-input" placeholder="https://" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                  <div className="auth-input-wrap">
+                    <span className="auth-input-icon">
+                      <Globe size={18} />
+                    </span>
+                    <input
+                      id="website"
+                      type="url"
+                      className="auth-input"
+                      placeholder="https://institution.edu"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                    />
+                  </div>
                 </div>
+
                 <div className="form-group mb-4">
-                  <label className="form-label" htmlFor="regNo">{role === 'university_admin' ? 'NAAC / UGC Reg. No.' : 'MCA / GST Reg. No.'}</label>
-                  <input id="regNo" type="text" className="form-input" placeholder="Optional" value={registrationNo} onChange={(e) => setRegistrationNo(e.target.value)} />
+                  <label className="form-label" htmlFor="regNo">
+                    {role === 'university_admin' ? 'NAAC / UGC Reg. No.' : 'MCA / GST Reg. No.'}
+                  </label>
+                  <div className="auth-input-wrap">
+                    <span className="auth-input-icon">
+                      <FileText size={18} />
+                    </span>
+                    <input
+                      id="regNo"
+                      type="text"
+                      className="auth-input"
+                      placeholder="e.g. NAAC-A-2024"
+                      value={registrationNo}
+                      onChange={(e) => setRegistrationNo(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </>
           ) : (
-            <div className="form-group mb-4">
+            <div className="form-group mb-5">
               <label className="form-label" htmlFor="org">Organization / Department / Affiliation</label>
-              <input
-                id="org" type="text" className="form-input"
-                placeholder={role === 'faculty' ? 'e.g. Dept of Computer Engineering' : 'e.g. Green Earth Foundation / Municipal Corp'}
-                value={organization} onChange={(e) => setOrganization(e.target.value)}
-              />
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">
+                  <Building size={18} />
+                </span>
+                <input
+                  id="org"
+                  type="text"
+                  className="auth-input"
+                  placeholder={role === 'faculty' ? 'e.g. Dept of Computer Engineering' : 'e.g. Green Earth Foundation / Municipal Corp'}
+                  value={organization}
+                  onChange={(e) => setOrganization(e.target.value)}
+                />
+              </div>
             </div>
           )}
 
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="btn btn-primary w-full"
-            style={{ padding: '12px', fontSize: '0.95rem' }}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary btn-lg w-full"
+            style={{ padding: '13px', fontSize: '0.98rem', marginTop: 8 }}
           >
-            {loading ? 'Creating Account...' : 'Create Account'} <ArrowRight size={16} />
+            {loading ? (
+              <span>Creating Account...</span>
+            ) : (
+              <>
+                Create Account <ArrowRight size={18} />
+              </>
+            )}
           </button>
         </form>
 
-        <div style={{ marginTop: 24, textAlign: 'center', fontSize: '0.875rem' }}>
+        <div style={{ marginTop: 28, textAlign: 'center', fontSize: '0.9rem' }}>
           <span className="text-secondary">Already have an account? </span>
           <Link to="/login" className="text-primary hover:underline" style={{ fontWeight: 600 }}>
             Sign In

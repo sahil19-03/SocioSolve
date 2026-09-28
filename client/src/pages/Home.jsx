@@ -104,39 +104,20 @@ export default function Home() {
         </section>
       )}
 
-      {/* ─── Value Proposition ─── */}
-      <section style={{ padding: '72px 0', background: 'rgba(8,15,38,0.4)' }}>
-        <div className="container">
-          <div className="card" style={{ padding: '40px 48px', background: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.08) 100%)', border: '1px solid rgba(59,130,246,0.25)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'center' }}>
-              <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0 }}>
-                🎯
-              </div>
-              <div>
-                <h3 style={{ fontSize: '1.45rem', marginBottom: 10, color: 'var(--text-primary)' }}>
-                  Innovation Challenges — Not Simple Complaint Tickets
-                </h3>
-                <p className="text-secondary" style={{ fontSize: '1rem', lineHeight: 1.7 }}>
-                  SocioSolve is engineered for <strong>systemic, open-ended civic bottlenecks</strong> that require interdisciplinary solutions — sensor instrumentation, AI vision models, and student-led R&D — connecting real problems directly with engineering capabilities.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ─── How It Works (Connected Interactive Workflow) ─── */}
       <HowItWorksWorkflow />
 
       {/* ─── Featured Challenges ─── */}
-      <section style={{ padding: '96px 0', background: 'rgba(8,15,38,0.4)', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
+      <section style={{ padding: '96px 0' }}>
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 44, flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <span className="badge badge-cyan" style={{ marginBottom: 12 }}>Live Now</span>
-              <h2 style={{ fontSize: '2.2rem', marginBottom: 8 }}>Featured Challenges</h2>
-              <p className="text-secondary" style={{ fontSize: '1rem' }}>Verified real-world problems actively seeking tech-driven solutions.</p>
-            </div>
+          {/* Section header — centred, matching categories style */}
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <span className="badge badge-blue" style={{ marginBottom: 12 }}>Live Now</span>
+            <h2 style={{ fontSize: '2.2rem', marginBottom: 12 }}>Featured Challenges</h2>
+            <p className="text-secondary" style={{ maxWidth: 600, margin: '0 auto 28px', fontSize: '1rem', lineHeight: 1.6 }}>
+              Verified real-world problems actively seeking tech-driven solutions.
+            </p>
             <Link to="/explore" className="btn btn-outline btn-sm">
               View All Challenges <ArrowRight size={14} />
             </Link>

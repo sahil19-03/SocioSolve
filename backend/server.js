@@ -31,6 +31,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/milestones', require('./routes/milestones'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/industry', require('./routes/industry'));
+app.use('/api/analytics', require('./routes/analytics'));
 
 // ─── Health Check ─────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

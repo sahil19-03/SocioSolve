@@ -31,7 +31,7 @@ export default function SubmitterDashboard() {
   const [myChallenges, setMyChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Phase 10: Community Feedback Modal
+  // Community Feedback Modal
   const [feedbackModal, setFeedbackModal] = useState(null);
   const [rating, setRating] = useState(5);
   const [feedbackText, setFeedbackText] = useState('');
@@ -41,7 +41,7 @@ export default function SubmitterDashboard() {
   const loadMySubmissions = async () => {
     setLoading(true);
     try {
-      // Phase 1: dedicated /my endpoint returns ALL statuses for the logged-in submitter
+      // dedicated /my endpoint returns ALL statuses for the logged-in submitter
       const res = await api.get('/challenges/my');
       if (res.success && Array.isArray(res.data)) {
         setMyChallenges(res.data);
@@ -99,7 +99,7 @@ export default function SubmitterDashboard() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div>
-            <span className="badge badge-cyan" style={{ marginBottom: 12 }}>Phase 1 · Problem Submission Portal</span>
+            <span className="badge badge-cyan" style={{ marginBottom: 12 }}>Problem Submission Portal</span>
             <h1 style={{ fontSize: '2.2rem', marginBottom: 8 }}>Welcome, {user?.name || 'Problem Submitter'}</h1>
             <p className="text-secondary" style={{ maxWidth: 640 }}>
               Track every challenge you submitted — from community report through government verification to university innovation and real-world implementation.
@@ -278,7 +278,7 @@ export default function SubmitterDashboard() {
         </div>
       )}
 
-      {/* Phase 10: Citizen Impact Feedback Modal */}
+      {/* Citizen Impact Feedback Modal */}
       {feedbackModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -294,7 +294,7 @@ export default function SubmitterDashboard() {
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span className="badge badge-cyan">Phase 10: Beneficiary Validation</span>
+              <span className="badge badge-cyan">Beneficiary Validation</span>
               <span className="badge badge-emerald">Citizen Review</span>
             </div>
 

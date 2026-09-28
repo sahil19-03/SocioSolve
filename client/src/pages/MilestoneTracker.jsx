@@ -372,7 +372,7 @@ export default function MilestoneTracker({ teamId: propTeamId }) {
 
         {/* Page Header */}
         <div style={{ marginBottom: 36 }}>
-          <span className="badge badge-cyan" style={{ marginBottom: 10 }}>Phase 7 · Development & Execution</span>
+          <span className="badge badge-cyan" style={{ marginBottom: 10 }}>Development & Execution</span>
           <h1 style={{ fontSize: '2.2rem', marginBottom: 6 }}>Milestone Tracker</h1>
           <p className="text-secondary">
             {isFaculty ? 'Supervise team progress, validate milestones and provide feedback.' : 'Track deliverables, report progress, and stay on top of your project lifecycle.'}
@@ -517,12 +517,12 @@ export default function MilestoneTracker({ teamId: propTeamId }) {
                 <input type="date" className="form-input" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Order / Phase #</label>
+                <label className="form-label">Display order</label>
                 <input type="number" className="form-input" placeholder="e.g. 1" min={1} value={form.orderIndex} onChange={e => setForm({ ...form, orderIndex: e.target.value })} />
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">Deliverables (one per line)</label>
-                <textarea className="form-textarea" rows={3} placeholder={"Working prototype\nTest report\nVideo demo"} value={form.deliverables} onChange={e => setForm({ ...form, deliverables: e.target.value })} />
+                <textarea className="form-textarea" rows={3} placeholder={"Working prototype\r\nTest report\r\nVideo demo"} value={form.deliverables} onChange={e => setForm({ ...form, deliverables: e.target.value })} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
@@ -576,10 +576,16 @@ export default function MilestoneTracker({ teamId: propTeamId }) {
           <div className="card p-8" style={{ textAlign: 'center', marginTop: 20 }}>
             <Users size={48} color="#64748b" style={{ margin: '0 auto 16px' }} />
             <h3 style={{ marginBottom: 8 }}>No team found</h3>
-            <p className="text-muted" style={{ marginBottom: 20 }}>You need to join or create a team to track milestones.</p>
-            <a href="/team-formation" className="btn btn-primary">
-              <Users size={16} /> Go to Team Formation
-            </a>
+            <p className="text-muted" style={{ marginBottom: 20 }}>
+              {['student', 'faculty', 'university_admin', 'admin'].includes(user?.role)
+                ? 'You need to join or create a team to track milestones.'
+                : 'Milestone tracking becomes available when a student team is associated with a challenge.'}
+            </p>
+            {['student', 'faculty', 'university_admin', 'admin'].includes(user?.role) && (
+              <a href="/team-formation" className="btn btn-primary">
+                <Users size={16} /> Go to Team Formation
+              </a>
+            )}
           </div>
         )}
       </div>

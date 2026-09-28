@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { api, utils } from '../services/api';
 import {
   Compass, PlusCircle, Handshake, Info, LayoutDashboard,
-  LogOut, Sun, Moon, Bell, BarChart2, Users, User, Menu, X,
-  Home, Flag, BookMarked, Sparkles, Target, ShieldCheck, ClipboardList
+  LogOut, BarChart2, Users, User, Menu, X,
+  Home, BookMarked, Target, ShieldCheck
 } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, isLoggedIn, logout, getDashboardPath } = useAuth();
-  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,42 +51,48 @@ export default function Sidebar() {
     }
   };
 
-  // Role-specific workspace tools
+  // Role-specific workspace tools (strictly tailored for this particular account)
   const getWorkspaceNav = (role) => {
     switch (role) {
       case 'student':
         return [
+          { to: '/explore',         icon: <Compass size={18} />,    label: 'Explore Challenges'    },
           { to: '/team-formation',  icon: <Users size={18} />,      label: 'Teams & Collaboration' },
           { to: '/milestones',      icon: <Target size={18} />,     label: 'Milestone Tracker'     },
           { to: '/submit-solution', icon: <BookMarked size={18} />, label: 'Submit Solution'       },
         ];
       case 'citizen':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Browse Challenges'    },
           { to: '/submit-challenge', icon: <PlusCircle size={18} />, label: 'Submit Problem'       },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Track Milestones'     },
         ];
       case 'faculty':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Explore Challenges'   },
           { to: '/team-formation',   icon: <Users size={18} />,      label: 'Student Teams'        },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Milestone Approvals'  },
         ];
       case 'expert':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Explore Challenges'   },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Evaluation & Rubrics' },
         ];
       case 'university_admin':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Explore Challenges'   },
           { to: '/team-formation',   icon: <Users size={18} />,      label: 'Campus Student Teams' },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Milestones & Progress'},
           { to: '/analytics',        icon: <BarChart2 size={18} />,  label: 'HEI Analytics'        },
         ];
       case 'nodal_officer':
         return [
-          { to: '/explore',          icon: <Compass size={18} />,     label: 'Public Challenge Catalog' },
-          { to: '/analytics',        icon: <BarChart2 size={18} />,   label: 'State Impact Analytics'   },
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Challenge Catalog'    },
+          { to: '/analytics',        icon: <BarChart2 size={18} />,  label: 'State Impact Analytics'},
         ];
       case 'admin':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'All Challenges'        },
           { to: '/team-formation',   icon: <Users size={18} />,      label: 'Teams & Collaboration' },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Milestone Tracker'     },
           { to: '/submit-challenge', icon: <PlusCircle size={18} />, label: 'Submit Problem'        },
@@ -97,25 +100,16 @@ export default function Sidebar() {
         ];
       case 'industry_partner':
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Browse Challenges'     },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Milestone Tracker'     },
         ];
       default:
         return [
+          { to: '/explore',          icon: <Compass size={18} />,    label: 'Explore Challenges'    },
           { to: '/milestones',       icon: <Target size={18} />,     label: 'Milestone Tracker'     },
         ];
     }
   };
-
-  // Admin access to all dashboards
-  const allDashboards = [
-    { to: '/dashboard/admin',      label: '🛡️ Admin Console' },
-    { to: '/dashboard/nodal',      label: '🏛️ Nodal Officer' },
-    { to: '/dashboard/student',    label: '🎓 Student Portal' },
-    { to: '/dashboard/submitter',  label: '📢 Submitter Portal' },
-    { to: '/dashboard/faculty',    label: '🔬 Faculty Guide' },
-    { to: '/dashboard/expert',     label: '⭐ Expert Evaluator' },
-    { to: '/dashboard/university', label: '🏫 University HEI' },
-  ];
 
   const SidebarLink = ({ to, icon, label, exact, badge }) => (
     <NavLink
@@ -151,8 +145,13 @@ export default function Sidebar() {
       {/* ── Sidebar ──────────────────────────────────────── */}
       <aside className={`sidebar${mobileOpen ? ' sidebar--open' : ''}`}>
 
-        {/* Logo + Brand (Prominent & Clean) */}
-        <Link to="/" className="sb-brand" onClick={closeOnMobile}>
+        {/* Logo + Brand (Navigates to role dashboard if logged in, or / if visitor) */}
+        <Link
+          to={isLoggedIn && user ? getDashboardPath(user.role) : '/'}
+          className="sb-brand"
+          onClick={closeOnMobile}
+          title={isLoggedIn ? 'Go to your dashboard' : 'SocioSolve Home'}
+        >
           <div className="sb-logo-wrap">
             <img src="/logo.png" alt="SocioSolve Logo" />
           </div>
@@ -168,37 +167,17 @@ export default function Sidebar() {
         <nav className="sb-nav">
           {isLoggedIn && user ? (
             <>
-              {/* ── Workspace (Includes Respective Particular Dashboard) ── */}
-              <div className="sb-section-label">Workspace</div>
+              {/* Account Workspace: Particular Dashboard & Tools Only */}
+              <div className="sb-section-label">Account Workspace</div>
               <SidebarLink {...getParticularDashboard(user.role)} />
               {getWorkspaceNav(user.role).map(item => (
                 <SidebarLink key={item.to + item.label} {...item} />
               ))}
               <SidebarLink to="/profile" icon={<User size={18} />} label="My Profile & Settings" />
-
-              {/* Admin Switcher for all 6 dashboards */}
-              {user.role === 'admin' && (
-                <>
-                  <div className="sb-section-label" style={{ marginTop: 18 }}>All 6 Dashboards</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 4 }}>
-                    {allDashboards.map(dash => (
-                      <NavLink
-                        key={dash.to}
-                        to={dash.to}
-                        onClick={closeOnMobile}
-                        className={({ isActive }) => `sb-link sb-sublink${isActive ? ' sb-link--active' : ''}`}
-                        style={{ fontSize: '0.8rem', padding: '6px 10px' }}
-                      >
-                        <span className="sb-link-label">{dash.label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                </>
-              )}
             </>
           ) : (
             <>
-              {/* ── Public Visitor Navigation ── */}
+              {/* Public Visitor Navigation (Before Login) */}
               <div className="sb-section-label">Navigation</div>
               {publicNav.map(item => (
                 <SidebarLink key={item.to + item.label} {...item} />
@@ -212,19 +191,29 @@ export default function Sidebar() {
 
         <div className="sb-divider" />
 
-        {/* ── Bottom Network Status ───────────────────── */}
+        {/* ── Bottom Section ───────────────────────────── */}
         <div className="sb-bottom">
-          <div className="sb-status-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="sb-status-pulse" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Innovation Mesh Active
+          {isLoggedIn && user ? (
+            <button
+              onClick={handleLogout}
+              className="sb-logout-btn"
+              title="Sign out of your account"
+            >
+              <LogOut size={16} /> Sign Out
+            </button>
+          ) : (
+            <div className="sb-status-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="sb-status-pulse" />
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Innovation Mesh Active
+                </span>
+              </div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                AI Engine &bull; Real-time
               </span>
             </div>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-              AI Engine &bull; Real-time
-            </span>
-          </div>
+          )}
         </div>
       </aside>
     </>

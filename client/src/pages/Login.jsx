@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, ArrowRight, Lock, Mail } from 'lucide-react';
+import { ArrowRight, Lock, Mail, Eye, EyeOff, ChevronDown } from 'lucide-react';
 
 export default function Login() {
   const [searchParams] = useSearchParams();
@@ -13,6 +13,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -34,67 +35,139 @@ export default function Login() {
     }
   };
 
+  // Only fills the email — user must type their own password
+  const fillEmail = (demoEmail) => setEmail(demoEmail);
+
+  const demoRoles = [
+    { label: '🛡️ Admin',        email: 'admin@sociosolve.in' },
+    { label: '🎓 Student',       email: 'aarav.sharma@student.iitm.ac.in' },
+    { label: '📢 Submitter',     email: 'sunita.deshmukh@jaldrishti.org' },
+    { label: '🏛️ Nodal Officer', email: 'nodal.water@jharkhand.gov.in' },
+    { label: '🏫 University',    email: 'coordinator@iitm.ac.in' },
+    { label: '🔬 Faculty',       email: 'faculty@nit.ac.in' },
+    { label: '⭐ Expert',        email: 'priya.narang@ecogrid.in' },
+  ];
+
   return (
-    <div style={{ minHeight: 'calc(100vh - 72px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-      <div className="card" style={{ width: '100%', maxWidth: 440, padding: '40px 36px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div className="brand-icon" style={{ margin: '0 auto 16px', width: 48, height: 48, fontSize: '1.6rem' }}>⚡</div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: 8 }}>Welcome Back</h2>
-          <p className="text-secondary" style={{ fontSize: '0.9rem' }}>
-            Sign in to SocioSolve to access your projects and challenges
+    <div className="auth-page-wrapper">
+      <div className="auth-ambient-glow" />
+
+      <div className="card auth-card auth-card--login">
+        {/* Brand & Emblem Header */}
+        <div className="auth-header">
+          <Link to="/" className="auth-brand-link" title="SocioSolve National Platform">
+            <div className="auth-logo-badge">
+              <img src="/logo.png" alt="SocioSolve Emblem" />
+            </div>
+            <div className="auth-brand-title">
+              Socio<span>Solve</span>
+            </div>
+            <span className="auth-brand-pill">
+              National Innovation Network
+            </span>
+          </Link>
+
+          <h1 className="auth-heading">Welcome Back</h1>
+          <p className="auth-lead">
+            Sign in to access your challenges, team collaborations, and prototype evaluations
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="form-group mb-4">
-            <label className="form-label" htmlFor="email">Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
-              <input 
-                id="email"
+          <div className="form-group mb-5">
+            <label className="form-label" htmlFor="loginEmail">Email Address</label>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon">
+                <Mail size={18} />
+              </span>
+              <input
+                id="loginEmail"
                 type="email"
-                className="form-input"
-                style={{ paddingLeft: 40 }}
+                className="auth-input"
                 placeholder="name@university.edu or domain.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
           </div>
 
           <div className="form-group mb-6">
-            <label className="form-label" htmlFor="password">Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
-              <input 
-                id="password"
-                type="password"
-                className="form-input"
-                style={{ paddingLeft: 40 }}
-                placeholder="••••••••"
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" htmlFor="loginPassword" style={{ marginBottom: 0 }}>Password</label>
+            </div>
+            <div className="auth-input-wrap">
+              <span className="auth-input-icon">
+                <Lock size={18} />
+              </span>
+              <input
+                id="loginPassword"
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
+              <button
+                type="button"
+                className="auth-input-action"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="btn btn-primary w-full"
-            style={{ padding: '12px', fontSize: '0.95rem' }}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary btn-lg w-full"
+            style={{ padding: '13px', fontSize: '0.98rem' }}
           >
-            {loading ? 'Signing In...' : 'Sign In'} <ArrowRight size={16} />
+            {loading ? (
+              <span>Signing In...</span>
+            ) : (
+              <>
+                Sign In <ArrowRight size={18} />
+              </>
+            )}
           </button>
         </form>
 
+        {/* Demo Role Email Quick-Fill — email only, no password exposed */}
+        <details className="auth-demo-hint" style={{ marginTop: 20 }}>
+          <summary>
+            <ChevronDown size={14} style={{ transition: 'transform 0.2s' }} />
+            Sign in as a demo role
+          </summary>
+          <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {demoRoles.map(({ label, email: demoEmail }) => (
+              <button
+                key={demoEmail}
+                type="button"
+                className="auth-demo-pill"
+                onClick={() => fillEmail(demoEmail)}
+                title={`Fill email: ${demoEmail}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+            Click a role to auto-fill the email. Enter your password manually to sign in.
+          </p>
+        </details>
+
+
         {/* Footer info */}
-        <div style={{ marginTop: 28, textAlign: 'center', fontSize: '0.875rem' }}>
-          <span className="text-secondary">New to SocioSolve? </span>
+        <div style={{ marginTop: 28, textAlign: 'center', fontSize: '0.9rem' }}>
+          <span className="text-secondary">New to <span style={{ color: 'var(--color-primary-400)', fontWeight: 700 }}>SocioSolve</span>? </span>
           <Link to="/register" className="text-primary hover:underline" style={{ fontWeight: 600 }}>
             Create an Account
           </Link>

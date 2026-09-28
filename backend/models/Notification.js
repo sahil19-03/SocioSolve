@@ -13,20 +13,7 @@ const Notification = sequelize.define('Notification', {
     primaryKey: true
   },
   type: {
-    type: DataTypes.ENUM(
-      'challenge_verified',
-      'challenge_assigned',
-      'challenge_rejected',
-      'team_joined',
-      'team_request',
-      'solution_reviewed',
-      'solution_selected',
-      'milestone_due',
-      'milestone_approved',
-      'partnership_proposed',
-      'partnership_accepted',
-      'general'
-    ),
+    type: DataTypes.STRING,
     allowNull: false
   },
   title: {
@@ -47,7 +34,7 @@ const Notification = sequelize.define('Notification', {
     allowNull: true
   },
   relatedType: {
-    type: DataTypes.ENUM('challenge', 'team', 'solution', 'milestone', 'partnership'),
+    type: DataTypes.STRING,
     allowNull: true
   },
   // Foreign key: userId set via associations in index.js

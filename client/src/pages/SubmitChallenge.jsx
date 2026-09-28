@@ -23,7 +23,7 @@ export default function SubmitChallenge() {
   const [impactScope, setImpactScope] = useState('district');
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Phase 1 fields
+  // fields
   const [affectedPopulation, setAffectedPopulation] = useState('');
   const [urgency, setUrgency] = useState('medium');
   const [expectedOutcome, setExpectedOutcome] = useState('');
@@ -276,7 +276,7 @@ export default function SubmitChallenge() {
             </div>
           </div>
 
-          {/* 4b. Phase 1 — Impact & Urgency */}
+          {/* 4b. — Impact & Urgency */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
             <div className="form-group">
               <label className="form-label" htmlFor="affected">Approximate Affected Population</label>

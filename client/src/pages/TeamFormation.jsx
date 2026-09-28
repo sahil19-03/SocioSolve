@@ -48,6 +48,15 @@ export default function TeamFormation() {
   const [selectedRole, setSelectedRole] = useState(SKILL_ROLES[0]);
   const [joining, setJoining] = useState(false);
 
+  // Add Teammate Modal State
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [studentCandidates, setStudentCandidates] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [manualStudentEmail, setManualStudentEmail] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState(SKILL_ROLES[0]);
+  const [addingMember, setAddingMember] = useState(false);
+  const [searchingStudents, setSearchingStudents] = useState(false);
+
   const loadData = async () => {
     try {
       const [chalRes, facRes] = await Promise.all([
@@ -156,6 +165,49 @@ export default function TeamFormation() {
     }
   };
 
+  const openAddMemberModal = async () => {
+    setShowAddMemberModal(true);
+    setSearchingStudents(true);
+    try {
+      const res = await api.get('/teams/available-students');
+      if (res.success && res.data) {
+        setStudentCandidates(res.data);
+      }
+    } catch (_) {}
+    finally {
+      setSearchingStudents(false);
+    }
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!activeTeam) return;
+    if (!selectedStudentId && !manualStudentEmail.trim()) {
+      toast.error('Please select a student from the list or enter an email address.');
+      return;
+    }
+
+    setAddingMember(true);
+    try {
+      const payload = {
+        role: newMemberRole,
+        ...(selectedStudentId ? { studentId: selectedStudentId } : { email: manualStudentEmail.trim() })
+      };
+      const res = await api.post(`/teams/${activeTeam.id}/add-member`, payload);
+      toast.success(res.message || 'Teammate successfully added to squad!');
+      setShowAddMemberModal(false);
+      setSelectedStudentId('');
+      setManualStudentEmail('');
+      loadData();
+      // Notify other components locally
+      window.dispatchEvent(new CustomEvent('notification-refresh'));
+    } catch (err) {
+      toast.error(err.message || 'Failed to add teammate to squad');
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
   const isLeader = activeTeam && user && activeTeam.leaderId === user.id;
   const isMember = activeTeam && user && (activeTeam.members || []).some(m => m.id === user.id);
   const isCoordinator = user && (user.role === 'university_admin' || user.role === 'admin');
@@ -167,7 +219,7 @@ export default function TeamFormation() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 36, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span className="badge badge-purple">Phase 5: Team Formation</span>
+              <span className="badge badge-purple">Team Formation</span>
               <span className="badge badge-cyan">NEP 2020 Multidisciplinary</span>
             </div>
             <h1 style={{ fontSize: '2.4rem', marginBottom: 8 }}>Student Squads & Mentorship Pairing</h1>
@@ -211,14 +263,14 @@ export default function TeamFormation() {
                   </Link>
                 )}
 
-                {/* Direct Phase 6 CTA if student is leader/member */}
+                {/* Direct CTA if student is leader/member */}
                 {(isLeader || isMember) && (
                   <Link
                     to={`/submit-solution?teamId=${activeTeam.id}&challengeId=${activeTeam.Challenge?.id}`}
                     className="btn btn-primary btn-sm"
                     style={{ background: '#06b6d4', borderColor: '#06b6d4' }}
                   >
-                    <Lightbulb size={14} style={{ marginRight: 6 }} /> Submit Proposal (Phase 6)
+                    <Lightbulb size={14} style={{ marginRight: 6 }} /> Submit Proposal
                   </Link>
                 )}
 
@@ -242,14 +294,24 @@ export default function TeamFormation() {
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 24, marginTop: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Team Constitution & Assigned Skills</h3>
-                {!isMember && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
-                  <button
-                    onClick={() => { setTargetJoinTeamId(activeTeam.id); setShowJoinModal(true); }}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    <Plus size={14} style={{ marginRight: 4 }} /> Join Squad
-                  </button>
-                )}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {(isLeader || isCoordinator) && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
+                    <button
+                      onClick={openAddMemberModal}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <UserPlus size={14} style={{ marginRight: 4 }} /> Add Teammate
+                    </button>
+                  )}
+                  {!isMember && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
+                    <button
+                      onClick={() => { setTargetJoinTeamId(activeTeam.id); setShowJoinModal(true); }}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      <Plus size={14} style={{ marginRight: 4 }} /> Join Squad
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
@@ -306,7 +368,7 @@ export default function TeamFormation() {
                   </div>
                 ) : (
                   <p className="text-muted" style={{ fontSize: '0.85rem' }}>
-                    No faculty mentor assigned. Guide is required to approve milestone submissions in Phase 6 & 7.
+                    No faculty mentor is assigned. A faculty guide is required to review milestone submissions.
                   </p>
                 )}
               </div>
@@ -549,6 +611,109 @@ export default function TeamFormation() {
                   {pairingMentor ? 'Pairing...' : 'Confirm Faculty Mentor'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add Teammate to Squad (Notifies the student in database) */}
+        {showAddMemberModal && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 20
+          }}>
+            <div className="card p-8" style={{ width: '100%', maxWidth: 520 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <span className="badge badge-purple" style={{ marginBottom: 6 }}>Direct Squad Invitation</span>
+                  <h3 style={{ margin: 0, fontSize: '1.35rem' }}>Add Teammate to Squad</h3>
+                </div>
+                <button
+                  onClick={() => setShowAddMemberModal(false)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-secondary" style={{ fontSize: '0.85rem', marginBottom: 20, lineHeight: 1.5 }}>
+                Adding a student will link them to your squad constitution and dispatch an immediate <strong>in-app notification pop-up alert</strong> to their account.
+              </p>
+
+              <form onSubmit={handleAddMember}>
+                {/* Option 1: Select from known students */}
+                <div className="form-group mb-4">
+                  <label className="form-label" style={{ fontSize: '0.88rem' }}>
+                    Select Registered Student
+                  </label>
+                  <select
+                    className="form-control"
+                    value={selectedStudentId}
+                    onChange={(e) => {
+                      setSelectedStudentId(e.target.value);
+                      if (e.target.value) setManualStudentEmail('');
+                    }}
+                    disabled={searchingStudents}
+                  >
+                    <option value="">-- Choose from available student innovators --</option>
+                    {studentCandidates.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.university || s.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ textAlign: 'center', margin: '10px 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  — OR ENTER STUDENT EMAIL DIRECTLY —
+                </div>
+
+                {/* Option 2: Enter Email */}
+                <div className="form-group mb-5">
+                  <label className="form-label" style={{ fontSize: '0.88rem' }}>
+                    Student Email Address
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="student@example.edu or student username"
+                    value={manualStudentEmail}
+                    onChange={(e) => {
+                      setManualStudentEmail(e.target.value);
+                      if (e.target.value) setSelectedStudentId('');
+                    }}
+                  />
+                </div>
+
+                {/* Designated Role */}
+                <div className="form-group mb-6">
+                  <label className="form-label" style={{ fontSize: '0.88rem' }}>
+                    Designated Engineering Role
+                  </label>
+                  <select
+                    className="form-control"
+                    value={newMemberRole}
+                    onChange={(e) => setNewMemberRole(e.target.value)}
+                  >
+                    {SKILL_ROLES.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowAddMemberModal(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingMember || (!selectedStudentId && !manualStudentEmail.trim())}
+                    className="btn btn-primary"
+                  >
+                    {addingMember ? 'Adding & Notifying...' : 'Add Teammate & Notify'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

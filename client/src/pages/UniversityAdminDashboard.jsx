@@ -69,12 +69,12 @@ export default function UniversityAdminDashboard() {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('');
 
-  // Claim modal state (Phase 4)
+  // Claim modal state
   const [claimTarget, setClaimTarget] = useState(null);
   const [claimNote, setClaimNote] = useState('');
   const [claiming, setClaiming] = useState(false);
 
-  // Proposal review modal state (Phase 6)
+  // Proposal review modal state
   const [reviewProposal, setReviewProposal] = useState(null);
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [reviewDecision, setReviewDecision] = useState('approved');
@@ -188,11 +188,11 @@ export default function UniversityAdminDashboard() {
                 <span className="badge" style={{ background: 'rgba(129,140,248,.25)', color: '#818cf8', border: '1px solid rgba(129,140,248,.4)' }}>
                   <Building2 size={13} style={{ marginRight: 5 }} />HEI Coordinator Portal
                 </span>
-                <span className="badge badge-cyan">Phases 4–6: Match & Endorsement</span>
+                <span className="badge badge-cyan">Match & Endorsement</span>
               </div>
               <h1 style={{ fontSize: '2.1rem', marginBottom: 8 }}>{user?.organization || 'University Dashboard'}</h1>
               <p className="text-secondary" style={{ maxWidth: 680, margin: 0 }}>
-                Claim public challenges (Phase 4), supervise student multidisciplinary squads (Phase 5), and provide Tier 2 institutional endorsement for engineering proposals (Phase 6).
+                Claim public challenges, supervise multidisciplinary student teams, and review engineering proposals for institutional support.
               </p>
             </div>
 
@@ -228,25 +228,25 @@ export default function UniversityAdminDashboard() {
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#818cf8', marginTop: 4 }}>
               {loading ? '—' : campusTeams.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '.78rem', marginTop: 4 }}>Phase 5: Student Formations</div>
+            <div className="text-secondary" style={{ fontSize: '.78rem', marginTop: 4 }}>Student Formations</div>
           </div>
 
           <div className="card p-6" style={{ borderLeft: '4px solid #f59e0b' }}>
-            <span className="text-muted" style={{ fontSize: '.85rem', fontWeight: 600 }}>Tier 2 Proposals Pending</span>
+            <span className="text-muted" style={{ fontSize: '.85rem', fontWeight: 600 }}>Proposals Pending</span>
             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#f59e0b', marginTop: 4 }}>
               {loading ? '—' : proposals.length}
             </div>
-            <div className="text-secondary" style={{ fontSize: '.78rem', marginTop: 4 }}>Phase 6: Awaiting HEI Endorsement</div>
+            <div className="text-secondary" style={{ fontSize: '.78rem', marginTop: 4 }}>Awaiting HEI Endorsement</div>
           </div>
         </div>
 
         {/* ── Tab Navigation ───────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border-color)', marginBottom: 24, paddingBottom: 8, flexWrap: 'wrap' }}>
           {[
-            { key: 'available', label: `Phase 4: Available Challenges (${available.length})` },
+            { key: 'available', label: `Available Challenges (${available.length})` },
             { key: 'claimed',   label: `Claimed Challenges (${claimed.length})` },
-            { key: 'teams',     label: `Phase 5: Campus Squads (${campusTeams.length})` },
-            { key: 'proposals', label: `Phase 6: Tier 2 Proposals (${proposals.length})` },
+            { key: 'teams',     label: `Campus Squads (${campusTeams.length})` },
+            { key: 'proposals', label: `Proposal Reviews (${proposals.length})` },
           ].map(tab => (
             <button
               key={tab.key}
@@ -259,7 +259,7 @@ export default function UniversityAdminDashboard() {
           ))}
         </div>
 
-        {/* ── TAB 1: Available Challenges (Phase 4) ────────────────── */}
+        {/* ── TAB 1: Available Challenges ────────────────── */}
         {activeTab === 'available' && (
           <>
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -382,7 +382,7 @@ export default function UniversityAdminDashboard() {
           </div>
         )}
 
-        {/* ── TAB 3: Campus Squads (Phase 5) ────────────────────────── */}
+        {/* ── TAB 3: Campus Teams ────────────────────────── */}
         {activeTab === 'teams' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {campusTeams.length === 0 ? (
@@ -437,14 +437,14 @@ export default function UniversityAdminDashboard() {
           </div>
         )}
 
-        {/* ── TAB 4: Tier 2 Proposal Reviews (Phase 6) ──────────────── */}
+        {/* ── TAB 4: Proposal Reviews ──────────────── */}
         {activeTab === 'proposals' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {proposals.length === 0 ? (
               <div className="card p-10 text-center">
                 <CheckCircle2 size={40} style={{ color: '#10b981', margin: '0 auto 16px' }} />
-                <h3>No Tier 2 Proposals Awaiting Endorsement</h3>
-                <p className="text-secondary">Proposals appear here once they pass Tier 1 Faculty Mentor verification.</p>
+                <h3>No Proposal Reviews Awaiting Endorsement</h3>
+                <p className="text-secondary">Proposals appear here once they pass faculty mentor review.</p>
               </div>
             ) : (
               proposals.map(p => (
@@ -452,8 +452,8 @@ export default function UniversityAdminDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                        <span className="badge badge-amber">Tier 2: HEI Institutional Gate</span>
-                        <span className="badge badge-green">Faculty Tier 1: Approved ✓</span>
+                        <span className="badge badge-amber">Institutional Review</span>
+                        <span className="badge badge-green">Faculty Review: Approved ✓</span>
                       </div>
                       <h3 style={{ fontSize: '1.3rem' }}>{p.title}</h3>
                       <p className="text-secondary" style={{ fontSize: '.88rem', margin: '4px 0 0' }}>
@@ -537,7 +537,7 @@ export default function UniversityAdminDashboard() {
 
               <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                 <Building2 size={22} color="#818cf8" />
-                <h2 style={{ fontSize: '1.35rem', margin: 0 }}>Tier 2 Institutional Lab Endorsement</h2>
+                <h2 style={{ fontSize: '1.35rem', margin: 0 }}>Institutional Lab Endorsement</h2>
               </div>
 
               <p className="text-secondary" style={{ fontSize: '.9rem', marginBottom: 16 }}>
@@ -555,7 +555,7 @@ export default function UniversityAdminDashboard() {
                       checked={reviewDecision === 'approved'}
                       onChange={() => setReviewDecision('approved')}
                     />
-                    <span style={{ color: '#10b981', fontWeight: 600 }}>Endorse & Forward to Tier 3 (Govt Nodal Officer)</span>
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>Endorse & Forward for Government Review</span>
                   </label>
                 </div>
               </div>
@@ -574,7 +574,7 @@ export default function UniversityAdminDashboard() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                 <button onClick={() => setReviewProposal(null)} className="btn btn-outline" disabled={reviewing}>Cancel</button>
                 <button onClick={handleProposalReviewSubmit} className="btn btn-primary" disabled={reviewing}>
-                  {reviewing ? 'Submitting…' : 'Confirm Tier 2 Endorsement ✓'}
+                  {reviewing ? 'Submitting…' : 'Confirm Endorsement ✓'}
                 </button>
               </div>
             </div>

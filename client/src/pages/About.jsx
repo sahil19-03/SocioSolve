@@ -32,7 +32,7 @@ export default function About() {
             letterSpacing: '-0.02em',
             fontFamily: 'var(--font-outfit)'
           }}>
-            What is <span className="text-gradient">SocioSolve</span>?
+            What is <span style={{ color: 'var(--color-primary-400)' }}>SocioSolve</span>?
           </h1>
 
           <p className="text-secondary" style={{

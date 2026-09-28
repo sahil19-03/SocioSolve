@@ -8,10 +8,14 @@ export default function Footer() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 40, marginBottom: 48 }}>
           {/* Brand Col */}
           <div>
-            <div className="brand" style={{ marginBottom: 16 }}>
-              <div className="brand-icon">⚡</div>
-              <span className="brand-text" style={{ color: '#f8fafc' }}>Socio<span>Solve</span></span>
-            </div>
+            <Link to="/" className="brand" style={{ marginBottom: 16, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <div className="footer-logo-wrap">
+                <img src="/logo.png" alt="SocioSolve Logo" />
+              </div>
+              <span className="brand-text" style={{ color: 'var(--color-primary-400)', fontSize: '1.3rem', fontWeight: 800 }}>
+                Socio<span style={{ color: 'var(--color-primary-400)' }}>Solve</span>
+              </span>
+            </Link>
             <p style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: 16 }}>
               An open collaborative platform connecting communities and innovators to tackle real-world societal challenges through technology.
             </p>
@@ -56,7 +60,7 @@ export default function Footer() {
 
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <p style={{ fontSize: '0.825rem', color: '#64748b' }}>
-            © {new Date().getFullYear()} SocioSolve — Bridging communities and innovators for a better world.
+            © {new Date().getFullYear()} <span style={{ color: 'var(--color-primary-400)', fontWeight: 600 }}>SocioSolve</span> — Bridging communities and innovators for a better world.
           </p>
           <div style={{ display: 'flex', gap: 20, fontSize: '0.825rem' }}>
             <span style={{ color: '#64748b' }}>Status: Operational</span>

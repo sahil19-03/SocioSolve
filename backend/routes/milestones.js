@@ -257,28 +257,33 @@ router.put('/:id/validate', protect, authorize('faculty', 'admin'), async (req, 
       updates.completedAt = new Date();
       updates.approvedById = req.user.id;
 
-      // Notify team leader
-      await createNotification({
-        userId: team.leaderId,
-        type: 'milestone_approved',
-        title: '✅ Milestone Approved!',
-        message: `Your faculty mentor approved milestone "${milestone.title}" for team "${team.name}".`,
-        relatedId: milestone.id,
-        relatedType: 'milestone'
-      });
+      // Notify all squad members
+      const members = await TeamMember.findAll({ where: { TeamId: team.id } });
+      for (const m of members) {
+        await createNotification({
+          userId: m.UserId,
+          type: 'milestone_approved',
+          title: '✅ Milestone Approved!',
+          message: `Your faculty mentor approved milestone "${milestone.title}" for squad "${team.name}".`,
+          relatedId: milestone.id,
+          relatedType: 'milestone'
+        });
+      }
 
-      // Check if all milestones done — notify university admin
+      // Check if all milestones done — notify university admin & members
       const allMilestones = await Milestone.findAll({ where: { teamId: team.id } });
       const allDone = allMilestones.every(m => m.id === milestone.id ? true : m.status === 'completed');
       if (allDone && allMilestones.length > 0) {
-        await createNotification({
-          userId: team.leaderId,
-          type: 'project_complete',
-          title: '🎉 All Milestones Complete!',
-          message: `Your team "${team.name}" has completed all milestones. Congratulations!`,
-          relatedId: team.id,
-          relatedType: 'team'
-        });
+        for (const m of members) {
+          await createNotification({
+            userId: m.UserId,
+            type: 'project_complete',
+            title: '🎉 All Milestones Complete!',
+            message: `Your squad "${team.name}" has completed all project milestones. Ready for national showcase!`,
+            relatedId: team.id,
+            relatedType: 'team'
+          });
+        }
       }
     } else if (action === 'request_revision') {
       updates.status = 'in_progress';

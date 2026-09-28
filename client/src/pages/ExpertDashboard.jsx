@@ -15,7 +15,7 @@ export default function ExpertDashboard() {
   const [solutions, setSolutions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Evaluation Rubric Modal (Phase 8 Multi-Axis Independent Prototype Evaluation)
+  // Evaluation Rubric Modal (Multi-Axis Independent Prototype Evaluation)
   const [evalModal, setEvalModal] = useState(null);
   const [technicalScore, setTechnicalScore] = useState(85);
   const [socialImpactScore, setSocialImpactScore] = useState(90);
@@ -113,7 +113,7 @@ export default function ExpertDashboard() {
       <div className="card p-8 mb-8" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span className="badge badge-amber" style={{ marginBottom: 12 }}>Phase 8: Multi-Axis Independent Evaluation</span>
+            <span className="badge badge-amber" style={{ marginBottom: 12 }}>Multi-Axis Independent Evaluation</span>
             <h1 style={{ fontSize: '2.2rem', marginBottom: 8 }}>Welcome, {user?.name || 'Domain Expert'}</h1>
             <p className="text-secondary" style={{ maxWidth: 680, lineHeight: 1.6 }}>
               Independently score student prototypes across 3 objective rubrics: <strong>Technical Feasibility</strong>, <strong>Social Impact</strong>, and <strong>Deployment Readiness</strong>. Institutional conflict-of-interest rules are automatically enforced.
@@ -296,7 +296,7 @@ export default function ExpertDashboard() {
             <Award size={48} color="#fbbf24" style={{ margin: '0 auto 16px' }} />
             <h4>No Prototypes Currently In Queue</h4>
             <p className="text-secondary" style={{ maxWidth: 480, margin: '0 auto' }}>
-              Student prototypes will appear here once their solution proposals pass Tier 3 Government clearance and developmental milestones are uploaded.
+              Student prototypes will appear here once their solution proposals pass government clearance and developmental milestones are uploaded.
             </p>
           </div>
         )}
@@ -454,7 +454,7 @@ export default function ExpertDashboard() {
                   style={{ width: 18, height: 18, cursor: 'pointer', accentColor: '#3b82f6' }}
                 />
                 <label htmlFor="pilotCert" style={{ margin: 0, fontSize: '0.9rem', cursor: 'pointer', fontWeight: 600 }}>
-                  Certify prototype as Ready for Field Pilot Deployment (Phase 9 clearance)
+                  Certify prototype as Ready for Field Pilot Deployment
                 </label>
               </div>
 

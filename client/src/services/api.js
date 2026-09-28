@@ -117,7 +117,25 @@ export const utils = {
 
   initials(name) {
     if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const honorifics = new Set([
+      'dr', 'doctor',
+      'shri', 'shree', 'sri', 'shrimati', 'smt',
+      'prof', 'professor',
+      'mr', 'mrs', 'ms', 'miss',
+      'er', 'engineer',
+      'adv', 'advocate',
+      'hon', 'honourable', 'honorable'
+    ]);
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    // Filter out honorifics like Dr., Shri, Shree, Prof., etc.
+    const cleanWords = words.filter(w => !honorifics.has(w.toLowerCase().replace(/[^a-z0-9]/g, '')));
+    const target = cleanWords.length > 0 ? cleanWords : words;
+    if (target.length === 1) {
+      return target[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase() || '?';
+    }
+    const first = target[0].replace(/[^a-zA-Z0-9]/g, '')[0] || '';
+    const last = target[target.length - 1].replace(/[^a-zA-Z0-9]/g, '')[0] || '';
+    return (first + last).toUpperCase() || '?';
   },
 
   difficultyBadge(level) {

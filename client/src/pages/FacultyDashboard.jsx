@@ -114,14 +114,14 @@ export default function FacultyDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-              <span className="badge badge-purple">Tier 1 Gatekeeper</span>
+              <span className="badge badge-purple">Faculty Reviewer</span>
               <span className="badge badge-blue">Academic Feasibility & Lab Rigour</span>
             </div>
             <h1 style={{ fontSize: '2.2rem', marginBottom: 8 }}>
               Welcome, Prof. {user?.name || 'Faculty Guide'}
             </h1>
             <p className="text-secondary" style={{ maxWidth: 680 }}>
-              Review student engineering proposals (Phase 6 Tier 1), validate sensor schematics and technical architecture, and endorse squads for institutional lab resources.
+              Review student engineering proposals, validate sensor schematics and technical architecture, and endorse squads for institutional lab resources.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -138,7 +138,7 @@ export default function FacultyDashboard() {
       {/* Stats Strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 32 }}>
         <div className="card p-6" style={{ borderLeft: '4px solid #8b5cf6' }}>
-          <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tier 1 Proposals Pending</span>
+          <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Proposals Pending</span>
           <div style={{ fontSize: '2rem', fontWeight: 800, color: '#8b5cf6', marginTop: 4 }}>
             {loading ? '—' : proposals.length}
           </div>
@@ -182,7 +182,7 @@ export default function FacultyDashboard() {
           className={`btn ${activeTab === 'proposals' ? 'btn-primary' : 'btn-outline'}`}
           style={{ borderRadius: 20 }}
         >
-          Phase 6: Tier 1 Proposal Reviews ({proposals.length})
+          Proposal Reviews ({proposals.length})
         </button>
         <button
           onClick={() => setActiveTab('milestones')}
@@ -206,14 +206,14 @@ export default function FacultyDashboard() {
           {loading ? (
             <div className="card p-12 text-center">
               <div className="spinner" style={{ margin: '0 auto 16px' }} />
-              <p className="text-muted">Loading Tier 1 proposal reviews...</p>
+              <p className="text-muted">Loading proposal reviews...</p>
             </div>
           ) : proposals.length === 0 ? (
             <div className="card p-12 text-center">
               <CheckCircle2 size={48} style={{ color: '#10b981', margin: '0 auto 16px', opacity: 0.8 }} />
-              <h3>All Tier 1 Proposals Validated</h3>
+              <h3>All Proposals Reviewed</h3>
               <p className="text-secondary" style={{ maxWidth: 480, margin: '8px auto 0' }}>
-                No student proposals are currently awaiting Tier 1 faculty mentor review. When teams submit proposals, they will appear here.
+                No student proposals are currently awaiting faculty mentor review. When teams submit proposals, they will appear here.
               </p>
             </div>
           ) : (
@@ -223,7 +223,7 @@ export default function FacultyDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                        <span className="badge badge-purple">Tier 1: Faculty Gate</span>
+                        <span className="badge badge-purple">Faculty Review</span>
                         <span className="badge badge-blue">Team: {prop.Team?.name || 'Student Squad'}</span>
                         {prop.Challenge?.submissionCode && (
                           <span className="badge badge-gray">{prop.Challenge.submissionCode}</span>
@@ -443,7 +443,7 @@ export default function FacultyDashboard() {
           <div className="card p-8" style={{ width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="badge badge-purple">Tier 1 Faculty Review</span>
+                <span className="badge badge-purple">Faculty Review</span>
                 <span className="badge badge-green">Academic Feasibility</span>
               </div>
               <button onClick={() => setReviewModalProposal(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
@@ -493,7 +493,7 @@ export default function FacultyDashboard() {
                     checked={reviewDecision === 'approved'}
                     onChange={() => setReviewDecision('approved')}
                   />
-                  <span style={{ color: '#10b981', fontWeight: 600 }}>Approve & Forward to Tier 2 (University Coordinator)</span>
+                  <span style={{ color: '#10b981', fontWeight: 600 }}>Approve & Forward to University Review</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
                   <input
@@ -532,7 +532,7 @@ export default function FacultyDashboard() {
                   borderColor: reviewDecision === 'approved' ? '#10b981' : '#f59e0b'
                 }}
               >
-                {reviewingProposal ? 'Recording...' : reviewDecision === 'approved' ? 'Grant Tier 1 Approval ✓' : 'Send Revisions Request'}
+                {reviewingProposal ? 'Recording...' : reviewDecision === 'approved' ? 'Approve Proposal ✓' : 'Send Revisions Request'}
               </button>
             </div>
           </div>

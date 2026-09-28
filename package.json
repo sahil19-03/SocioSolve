@@ -5,8 +5,8 @@
   "main": "backend/server.js",
   "scripts": {
     "build": "npm --prefix client run build",
-    "dev": "node backend/server.js",
-    "server": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "server": "nodemon backend/server.js",
     "client": "npm --prefix client run dev",
     "client:build": "npm --prefix client run build",
     "start": "node backend/server.js"

@@ -148,7 +148,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Phase 7 Widgets Row */}
+      {/* Widgets Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 32 }}>
         {/* Milestone Progress Widget */}
         <div className="card p-5" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(59,130,246,0.06))' }}>
@@ -238,7 +238,7 @@ export default function StudentDashboard() {
                 Step {(implCfg.step ?? 0) + 1} of 5 · {solution.Challenge?.title || 'Project'}
               </div>
 
-              {/* Phase 9: Pilot Status & Request Action */}
+              {/* Pilot Status & Request Action */}
               <div style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10 }}>
                 {solution.pilotPermitGranted ? (
                   <div style={{

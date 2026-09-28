@@ -142,7 +142,7 @@ export default function HowItWorksWorkflow() {
           </div>
 
           <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 800, marginBottom: 14, letterSpacing: '-0.02em' }}>
-            How <span className="text-gradient">SocioSolve</span> Works
+            How <span style={{ color: 'var(--color-primary-400)' }}>SocioSolve</span> Works
           </h2>
 
           <p className="text-secondary" style={{ maxWidth: 720, margin: '0 auto 28px', fontSize: '1.05rem', lineHeight: 1.7 }}>

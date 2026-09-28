@@ -2,24 +2,38 @@
  * SocioSolve — Unified DB Seeder (Pristine Mode)
  * ─────────────────────────────────────────────────────────────────────
  * Wipes the database and seeds ONLY:
- * 1. 11 Real Role Accounts
+ * 1. 11 Demo Role Accounts
  * 2. 11 Real Indian Societal Problem Statements (published/open)
  *
  * NO fake teams, NO fake solutions. The user can perform the entire
  * workflow manually via the UI.
  *
- * Run: node backend/seed.js
+ * In a disposable local/test database, set SEED_DEMO_PASSWORD and
+ * SEED_ALLOW_DATABASE_RESET=true in .env, then run:
+ * node backend/seed.js
  * ─────────────────────────────────────────────────────────────────────
  */
 
 require('dotenv').config();
 const { sequelize } = require('./config/database');
 const { User, Challenge } = require('./models');
-const bcrypt = require('bcryptjs');
+
+if (!['development', 'test'].includes(process.env.NODE_ENV)) {
+  throw new Error('Refusing to run the destructive seeder unless NODE_ENV is development or test.');
+}
+
+if (process.env.SEED_ALLOW_DATABASE_RESET !== 'true') {
+  throw new Error('Refusing to reset the database. Set SEED_ALLOW_DATABASE_RESET=true only for a disposable development/test database.');
+}
+
+const seedPassword = process.env.SEED_DEMO_PASSWORD;
+if (!seedPassword || seedPassword.length < 16 || seedPassword === 'replace-with-a-unique-local-password') {
+  throw new Error('Set SEED_DEMO_PASSWORD to a unique password of at least 16 characters in your local .env.');
+}
 
 const upsertUser = async (where, data) => {
-  const [user] = await User.findOrCreate({ where, defaults: { ...data, password: 'password123' } });
-  user.password = 'password123';
+  const [user] = await User.findOrCreate({ where, defaults: { ...data, password: seedPassword } });
+  user.password = seedPassword;
   await user.save();
   return user;
 };
@@ -35,94 +49,88 @@ async function seed() {
        ═══════════════════════════════════════════════════════════════ */
     console.log('\n👤 Creating role accounts…');
 
-    const admin = await upsertUser({ email: 'admin@sociosolve.in' }, {
-      name: 'System Administrator', role: 'admin',
-      organization: 'SocioSolve National Platform',
-      state: 'Delhi', district: 'New Delhi',
-      bio: 'Platform administrator managing SocioSolve national innovation network.'
+    const admin = await upsertUser({ email: 'admin@example.invalid' }, {
+      name: 'Demo Administrator', role: 'admin',
+      organization: 'Demo Platform', state: 'Delhi', district: 'New Delhi',
+      bio: 'Demo administrator account.'
     });
 
-    const citizen = await upsertUser({ email: 'sunita.deshmukh@jaldrishti.org' }, {
-      name: 'Sunita Deshmukh', role: 'citizen', phone: '+91 94220 38471',
-      organization: 'Jal-Drishti Water Conservation NGO', organizationType: 'ngo',
+    const citizen = await upsertUser({ email: 'citizen@example.invalid' }, {
+      name: 'Demo Citizen', role: 'citizen',
+      organization: 'Demo Water NGO', organizationType: 'ngo',
       state: 'Maharashtra', district: 'Nashik',
-      bio: 'Social activist working on safe drinking water access.',
+      bio: 'Demo citizen account for local water challenges.',
       interests: ['water_sanitation', 'tribal_rights', 'rural_livelihoods']
     });
 
-    const nodal = await upsertUser({ email: 'nodal.water@jharkhand.gov.in' }, {
-      name: 'Shri Manoj Kumar Sinha, IAS', role: 'nodal_officer', phone: '+91 651 2400123',
-      organization: 'Dept. of Drinking Water & Sanitation, Govt. of Jharkhand',
-      state: 'Jharkhand', district: 'Ranchi',
-      bio: 'IAS officer with 18 years of service in rural water infrastructure.',
-      registrationNo: 'IAS-JH-2006-BATCH-DWS'
+    const nodal = await upsertUser({ email: 'nodal.officer@example.invalid' }, {
+      name: 'Demo Nodal Officer', role: 'nodal_officer',
+      organization: 'Demo Water Department', state: 'Jharkhand', district: 'Ranchi',
+      bio: 'Demo government officer account.', registrationNo: 'DEMO-OFFICER-001'
     });
 
-    const uniAdmin = await upsertUser({ email: 'coordinator@iitm.ac.in' }, {
-      name: 'Prof. Meera Krishnamurthy', role: 'university_admin', phone: '+91 44 2257 8000',
-      organization: 'IIT Madras', institutionType: 'hei',
-      state: 'Tamil Nadu', district: 'Chennai',
-      website: 'https://www.iitm.ac.in', registrationNo: 'NAAC-A++-IITM-2024',
-      bio: 'Innovation Cell Director at IIT Madras.'
+    const uniAdmin = await upsertUser({ email: 'university.admin@example.invalid' }, {
+      name: 'Demo University Administrator', role: 'university_admin',
+      organization: 'Demo University', institutionType: 'hei',
+      state: 'Tamil Nadu', district: 'Chennai', website: 'https://example.invalid',
+      registrationNo: 'DEMO-UNIVERSITY-001', bio: 'Demo university administrator account.'
     });
 
-    const faculty = await upsertUser({ email: 'faculty@nit.ac.in' }, {
-      name: 'Dr. Rajesh Verma', role: 'faculty', phone: '+91 870 2459 301',
-      organization: 'Dept. of Electronics & Telecommunication — NIT Warangal',
-      university: 'NIT Warangal',
+    const faculty = await upsertUser({ email: 'faculty@example.invalid' }, {
+      name: 'Demo Faculty Member', role: 'faculty',
+      organization: 'Demo Engineering Department', university: 'Demo University',
       state: 'Telangana', district: 'Warangal',
-      bio: 'Professor with 17 years in wireless sensor networks.',
+      bio: 'Demo faculty account for mentoring student teams.',
       skills: ['IoT', 'Embedded Systems', 'LoRaWAN']
     });
 
-    const student = await upsertUser({ email: 'aarav.sharma@student.iitm.ac.in' }, {
-      name: 'Aarav Sharma', role: 'student', phone: '+91 98765 43210',
-      university: 'IIT Madras', state: 'Tamil Nadu', district: 'Chennai',
-      bio: 'Final-year B.Tech student in Engineering Design.',
+    const student = await upsertUser({ email: 'student.one@example.invalid' }, {
+      name: 'Demo Student One', role: 'student',
+      university: 'Demo University', state: 'Tamil Nadu', district: 'Chennai',
+      bio: 'Demo student account for testing the solution workflow.',
       skills: ['React', 'Node.js', 'Python', 'IoT', 'Embedded C', 'LoRaWAN'],
       interests: ['water_sanitation', 'solar_energy']
     });
 
-    const student2 = await upsertUser({ email: 'priya.nair@student.iitm.ac.in' }, {
-      name: 'Priya Nair', role: 'student', phone: '+91 97890 12345',
-      university: 'IIT Madras', state: 'Tamil Nadu', district: 'Chennai',
-      bio: 'M.Tech Water Resources Engineering.',
+    const student2 = await upsertUser({ email: 'student.two@example.invalid' }, {
+      name: 'Demo Student Two', role: 'student',
+      university: 'Demo University', state: 'Tamil Nadu', district: 'Chennai',
+      bio: 'Demo student account for testing team formation.',
       skills: ['GIS', 'Python', 'Water Chemistry', 'PostGIS'],
       interests: ['water_sanitation', 'gis']
     });
 
-    const student3 = await upsertUser({ email: 'rahul.gupta@student.iitm.ac.in' }, {
-      name: 'Rahul Gupta', role: 'student', phone: '+91 93456 78901',
-      university: 'IIT Madras', state: 'Uttar Pradesh', district: 'Varanasi',
-      bio: 'B.Tech Computer Science.',
+    const student3 = await upsertUser({ email: 'student.three@example.invalid' }, {
+      name: 'Demo Student Three', role: 'student',
+      university: 'Demo University', state: 'Uttar Pradesh', district: 'Varanasi',
+      bio: 'Demo student account for testing collaboration features.',
       skills: ['React', 'React Native', 'Node.js', 'PostgreSQL'],
       interests: ['public_administration', 'smart_cities']
     });
 
-    const expert = await upsertUser({ email: 'priya.narang@ecogrid.in' }, {
-      name: 'Dr. Priya Narang', role: 'expert', phone: '+91 80 4567 8901',
-      organization: 'EcoGrid Dynamics Pvt Ltd',
+    const expert = await upsertUser({ email: 'expert@example.invalid' }, {
+      name: 'Demo Expert', role: 'expert', organization: 'Demo Research Lab',
       state: 'Karnataka', district: 'Bengaluru',
-      bio: 'Principal Systems Architect.',
+      bio: 'Demo expert account for solution reviews.',
       skills: ['IoT', 'Solar Energy', 'System Architecture']
     });
 
-    const industryPartner = await upsertUser({ email: 'partnerships@techinnovate.in' }, {
-      name: 'Vikram Bose', role: 'industry_partner', phone: '+91 98400 56789',
-      organization: 'TechInnovate Solutions Pvt Ltd', institutionType: 'startup',
-      state: 'Karnataka', district: 'Bengaluru',
-      website: 'https://techinnovate.in', registrationNo: 'GST29ABCDE1234F1Z5',
-      bio: 'Founder of TechInnovate, a deep-tech startup.'
+    const industryPartner = await upsertUser({ email: 'industry.partner@example.invalid' }, {
+      name: 'Demo Industry Partner', role: 'industry_partner',
+      organization: 'Demo Technology Company', institutionType: 'startup',
+      state: 'Karnataka', district: 'Bengaluru', website: 'https://example.invalid',
+      registrationNo: 'DEMO-INDUSTRY-001',
+      bio: 'Demo industry account for testing partnership workflows.'
     });
 
-    const community = await upsertUser({ email: 'ramesh.patil@gramsabha.in' }, {
-      name: 'Ramesh Patil', role: 'community', phone: '+91 95527 34567',
-      organization: 'Gram Sabha — Gumla Block B, Jharkhand', organizationType: 'community_org',
+    const community = await upsertUser({ email: 'community.member@example.invalid' }, {
+      name: 'Demo Community Member', role: 'community',
+      organization: 'Demo Community Group', organizationType: 'community_org',
       state: 'Jharkhand', district: 'Gumla',
-      bio: 'Sarpanch of Gumla Block B Panchayat.'
+      bio: 'Demo community account for testing feedback and voting.'
     });
 
-    console.log('✅ All 11 user accounts ready.');
+    console.log('All 11 demo user accounts ready.');
 
     /* ═══════════════════════════════════════════════════════════════
        STEP 2 — REAL PROBLEM STATEMENTS (OPEN & PUBLISHED ONLY)
@@ -293,8 +301,9 @@ async function seed() {
 
   } catch (err) {
     console.error('❌ Seeding error:', err.message);
+    process.exitCode = 1;
   } finally {
-    process.exit(0);
+    await sequelize.close();
   }
 }
 

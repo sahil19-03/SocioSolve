@@ -81,6 +81,26 @@ router.get('/my', protect, async (req, res) => {
   }
 });
 
+// ─── GET /api/challenges/my-community-feedback ─── User's submitted community feedbacks ──
+router.get('/my-community-feedback', protect, async (req, res) => {
+  try {
+    const { CommunityFeedback } = require('../models');
+    const feedbacks = await CommunityFeedback.findAll({
+      where: { citizenId: req.user.id },
+      include: [
+        {
+          model: Challenge,
+          attributes: ['id', 'title', 'category', 'status', 'district', 'state', 'submissionCode']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json({ success: true, count: feedbacks.length, data: feedbacks });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
 // ─── GET /api/challenges/verification-queue ─── Nodal Officer / Admin: screening queue ────
 router.get('/verification-queue', protect, authorize('nodal_officer', 'admin'), async (req, res) => {
   try {
@@ -205,7 +225,7 @@ router.get('/stats/overview', protect, authorize('admin'), async (req, res) => {
 });
 
 // ─── POST /api/challenges ─── Phase 1: Problem Submission ────────────────
-router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
+router.post('/', protect, authorize('citizen', 'nodal_officer', 'admin'), upload.array('attachments', 5), async (req, res) => {
   try {
     const {
       title, description, category, difficulty, tags,
@@ -567,7 +587,7 @@ router.delete('/:id/comments/:commentId', protect, async (req, res) => {
 });
 
 // ─── Phase 10: POST /api/challenges/:id/community-feedback ─── Citizen Impact Rating & Feedback ──
-router.post('/:id/community-feedback', protect, async (req, res) => {
+router.post('/:id/community-feedback', protect, authorize('community', 'citizen', 'admin'), async (req, res) => {
   try {
     const { rating, feedback, verifiedImpact } = req.body;
     const challenge = await Challenge.findByPk(req.params.id);

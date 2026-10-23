@@ -15,8 +15,11 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [organization, setOrganization] = useState('');
+  const [organizationType, setOrganizationType] = useState('individual');
+  const [university, setUniversity] = useState('');
   const [skills, setSkills] = useState('React, IoT, Python');
   const [state, setState] = useState('');
+  const [district, setDistrict] = useState('');
   const [institutionType, setInstitutionType] = useState('');
   const [website, setWebsite] = useState('');
   const [registrationNo, setRegistrationNo] = useState('');
@@ -30,17 +33,15 @@ export default function Register() {
     'Uttarakhand','West Bengal','Delhi','Jammu & Kashmir','Ladakh','Puducherry'
   ];
 
-  const isInstitution = ['university_admin', 'industry_partner'].includes(role);
-
   const roles = [
     { id: 'student',          title: 'Student Innovator',  icon: '🎓', desc: 'Discover challenges, build solutions' },
-    { id: 'citizen',          title: 'Problem Submitter',  icon: '📢', desc: 'Submit real civic & NGO problems' },
+    { id: 'citizen',          title: 'Problem Submitter',  icon: '📢', desc: 'Citizen, Panchayat, ULB, NGO' },
     { id: 'nodal_officer',    title: 'Govt Nodal Officer', icon: '🏛️', desc: 'Verify, prioritize & route to HEIs' },
     { id: 'faculty',          title: 'Faculty Mentor',     icon: '📚', desc: 'Guide university teams on R&D' },
-    { id: 'expert',           title: 'Domain Expert',      icon: '⭐', desc: 'Evaluate feasibility & readiness' },
-    { id: 'university_admin', title: 'HEI Coordinator',    icon: '🏫', desc: 'Manage institutional innovation cell' },
-    { id: 'industry_partner', title: 'Industry Partner',   icon: '🤝', desc: 'Sponsorship, mentoring & adoption' },
-    { id: 'community',        title: 'Community Member',   icon: '🗳️', desc: 'Follow challenges & vote on impact' },
+    { id: 'expert',           title: 'Domain Evaluator',   icon: '⭐', desc: 'Independent scoring & rubrics' },
+    { id: 'university_admin', title: 'HEI Coordinator',    icon: '🏫', desc: 'Manage institutional participation' },
+    { id: 'industry_partner', title: 'Industry / CSR',     icon: '🤝', desc: 'Sponsorship, mentoring & adoption' },
+    { id: 'community',        title: 'Community Member',   icon: '🗳️', desc: 'Follow challenges & validate impact' },
   ];
 
   const handleSubmit = async (e) => {
@@ -48,16 +49,19 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
+      const skillsArray = skills ? skills.split(',').map((s) => s.trim()).filter(Boolean) : [];
       await register({
         name,
         email,
         password,
         role,
-        organization: organization || (role === 'student' ? 'University Student' : ''),
-        skills: role === 'student' ? skillsArray : [],
+        organization: organization || university || (role === 'student' ? 'Student Innovator' : ''),
+        organizationType: role === 'citizen' ? organizationType : (role === 'nodal_officer' ? 'government' : (role === 'industry_partner' ? 'industry' : 'individual')),
+        university: ['student', 'faculty', 'university_admin'].includes(role) ? (university || organization) : (university || null),
+        skills: ['student', 'faculty', 'expert'].includes(role) ? skillsArray : [],
         state: state || null,
-        institutionType: institutionType || null,
+        district: district || null,
+        institutionType: role === 'university_admin' ? 'hei' : (institutionType || null),
         website: website || null,
         registrationNo: registrationNo || null
       });
@@ -196,38 +200,256 @@ export default function Register() {
           </div>
 
           {/* Role-specific fields */}
-          {role === 'student' ? (
-            <div className="form-group mb-5">
-              <label className="form-label" htmlFor="skills">Technical Skills (Comma separated for AI Matching)</label>
-              <input
-                id="skills"
-                type="text"
-                className="form-input"
-                placeholder="e.g. React, Node.js, Python, IoT, ML, Flutter"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
-              />
-              <span className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4, display: 'block' }}>
-                Used by SocioSolve AI to compute match % for societal challenges.
-              </span>
-            </div>
-          ) : isInstitution ? (
+          {role === 'student' && (
             <>
               <div className="form-group mb-4">
-                <label className="form-label" htmlFor="org">
-                  {role === 'university_admin' ? 'University / Institution Name *' : 'Company / Organisation Name *'}
-                </label>
+                <label className="form-label" htmlFor="uni">University / College Name *</label>
                 <div className="auth-input-wrap">
-                  <span className="auth-input-icon">
-                    <Building size={18} />
-                  </span>
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="uni"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. Anna Technical University"
+                    value={organization}
+                    onChange={(e) => { setOrganization(e.target.value); setUniversity(e.target.value); }}
+                    required
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+                <div className="form-group mb-4">
+                  <label className="form-label">State</label>
+                  <select className="form-select" value={state} onChange={(e) => setState(e.target.value)}>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </div>
+                <div className="form-group mb-4">
+                  <label className="form-label">District</label>
+                  <input type="text" className="form-input" placeholder="e.g. Chennai" value={district} onChange={(e) => setDistrict(e.target.value)} />
+                </div>
+              </div>
+              <div className="form-group mb-5">
+                <label className="form-label" htmlFor="skills">Technical Skills (Comma-separated for AI Matching)</label>
+                <input
+                  id="skills"
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. React, Node.js, Python, IoT, Embedded C"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                />
+                <span className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4, display: 'block' }}>
+                  Used by SocioSolve AI to compute match % for societal challenges.
+                </span>
+              </div>
+            </>
+          )}
+
+          {role === 'citizen' && (
+            <>
+              <div className="form-group mb-4">
+                <label className="form-label">Submitter Category (submitter_type) *</label>
+                <select
+                  className="form-select"
+                  value={organizationType}
+                  onChange={(e) => setOrganizationType(e.target.value)}
+                  required
+                >
+                  <option value="individual">Individual Citizen</option>
+                  <option value="community_org">Gram Panchayat / Village Authority</option>
+                  <option value="government">Urban Local Body / Municipality</option>
+                  <option value="ngo">NGO / Non-Profit Organisation</option>
+                  <option value="community_org">Community Group / SHG</option>
+                  <option value="government">Government Department</option>
+                </select>
+                <span className="text-muted" style={{ fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
+                  SocioSolve accommodates citizens, panchayats, ULBs, NGOs, and departments under one verified submitter workflow.
+                </span>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="org">Organization / Locality / Panchayat Name</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
                   <input
                     id="org"
                     type="text"
                     className="auth-input"
-                    placeholder={role === 'university_admin' ? 'e.g. IIT Bombay' : 'e.g. TechVentures Pvt Ltd'}
+                    placeholder="e.g. Jal-Drishti NGO or Gumla Block Panchayat"
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+                <div className="form-group mb-4">
+                  <label className="form-label">State *</label>
+                  <select className="form-select" value={state} onChange={(e) => setState(e.target.value)} required>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </div>
+                <div className="form-group mb-4">
+                  <label className="form-label">District *</label>
+                  <input type="text" className="form-input" placeholder="e.g. Gumla" value={district} onChange={(e) => setDistrict(e.target.value)} required />
+                </div>
+              </div>
+            </>
+          )}
+
+          {role === 'nodal_officer' && (
+            <>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="org">Responsible Government Department *</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="org"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. Jharkhand Jal Mission / Dept of Drinking Water"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+                <div className="form-group mb-4">
+                  <label className="form-label">State *</label>
+                  <select className="form-select" value={state} onChange={(e) => setState(e.target.value)} required>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </div>
+                <div className="form-group mb-4">
+                  <label className="form-label">Jurisdiction District *</label>
+                  <input type="text" className="form-input" placeholder="e.g. Ranchi" value={district} onChange={(e) => setDistrict(e.target.value)} required />
+                </div>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="regNo">Officer ID / Employee Designation No. *</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><FileText size={18} /></span>
+                  <input
+                    id="regNo"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. JH-OFFICER-001"
+                    value={registrationNo}
+                    onChange={(e) => setRegistrationNo(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {role === 'faculty' && (
+            <>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="uni">University / Institution Name *</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="uni"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. Anna Technical University"
+                    value={university}
+                    onChange={(e) => { setUniversity(e.target.value); }}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="org">Academic Department *</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="org"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. Department of Electronics & Communication"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label">Mentoring Domain & Skills (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. IoT, Embedded Systems, LoRaWAN, Water Quality"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                />
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label">State</label>
+                <select className="form-select" value={state} onChange={(e) => setState(e.target.value)}>
+                  <option value="">Select State</option>
+                  {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {role === 'expert' && (
+            <>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="org">Research Lab / Organization / Institution *</label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="org"
+                    type="text"
+                    className="auth-input"
+                    placeholder="e.g. Indian Institute of Science"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label">Evaluation Domain Areas (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. IoT, Solar Energy, System Architecture, Water Treatment"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                />
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label">State</label>
+                <select className="form-select" value={state} onChange={(e) => setState(e.target.value)}>
+                  <option value="">Select State</option>
+                  {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {(role === 'university_admin' || role === 'industry_partner') && (
+            <>
+              <div className="form-group mb-4">
+                <label className="form-label" htmlFor="org">
+                  {role === 'university_admin' ? 'University / Institution Name *' : 'Company / Foundation Name *'}
+                </label>
+                <div className="auth-input-wrap">
+                  <span className="auth-input-icon"><Building size={18} /></span>
+                  <input
+                    id="org"
+                    type="text"
+                    className="auth-input"
+                    placeholder={role === 'university_admin' ? 'e.g. Anna Technical University' : 'e.g. GreenEdge Technologies Pvt Ltd'}
+                    value={organization}
+                    onChange={(e) => { setOrganization(e.target.value); if (role === 'university_admin') setUniversity(e.target.value); }}
                     required
                   />
                 </div>
@@ -235,7 +457,7 @@ export default function Register() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                 <div className="form-group mb-4">
-                  <label className="form-label">Institution Type *</label>
+                  <label className="form-label">Entity Type *</label>
                   <select
                     className="form-select"
                     value={institutionType}
@@ -249,7 +471,7 @@ export default function Register() {
                       <>
                         <option value="startup">Startup</option>
                         <option value="msme">MSME</option>
-                        <option value="csr">CSR / Foundation</option>
+                        <option value="csr">CSR / Corporate Foundation</option>
                         <option value="research_lab">Research Laboratory</option>
                         <option value="govt">Government Agency</option>
                         <option value="other">Other</option>
@@ -267,25 +489,21 @@ export default function Register() {
                     required
                   >
                     <option value="">Select State</option>
-                    {INDIAN_STATES.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
                   </select>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                 <div className="form-group mb-4">
-                  <label className="form-label" htmlFor="website">Website</label>
+                  <label className="form-label" htmlFor="website">Official Website</label>
                   <div className="auth-input-wrap">
-                    <span className="auth-input-icon">
-                      <Globe size={18} />
-                    </span>
+                    <span className="auth-input-icon"><Globe size={18} /></span>
                     <input
                       id="website"
                       type="url"
                       className="auth-input"
-                      placeholder="https://institution.edu"
+                      placeholder="https://example.edu"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
                     />
@@ -294,17 +512,15 @@ export default function Register() {
 
                 <div className="form-group mb-4">
                   <label className="form-label" htmlFor="regNo">
-                    {role === 'university_admin' ? 'NAAC / UGC Reg. No.' : 'MCA / GST Reg. No.'}
+                    {role === 'university_admin' ? 'NAAC / UGC Reg. No.' : 'CIN / GST / MSME Reg. No.'}
                   </label>
                   <div className="auth-input-wrap">
-                    <span className="auth-input-icon">
-                      <FileText size={18} />
-                    </span>
+                    <span className="auth-input-icon"><FileText size={18} /></span>
                     <input
                       id="regNo"
                       type="text"
                       className="auth-input"
-                      placeholder="e.g. NAAC-A-2024"
+                      placeholder={role === 'university_admin' ? 'e.g. TN-HEI-2024-001' : 'e.g. KA-STARTUP-2024-112'}
                       value={registrationNo}
                       onChange={(e) => setRegistrationNo(e.target.value)}
                     />
@@ -312,21 +528,20 @@ export default function Register() {
                 </div>
               </div>
             </>
-          ) : (
-            <div className="form-group mb-5">
-              <label className="form-label" htmlFor="org">Organization / Department / Affiliation</label>
-              <div className="auth-input-wrap">
-                <span className="auth-input-icon">
-                  <Building size={18} />
-                </span>
-                <input
-                  id="org"
-                  type="text"
-                  className="auth-input"
-                  placeholder={role === 'faculty' ? 'e.g. Dept of Computer Engineering' : 'e.g. Green Earth Foundation / Municipal Corp'}
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                />
+          )}
+
+          {role === 'community' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+              <div className="form-group mb-4">
+                <label className="form-label">Your State</label>
+                <select className="form-select" value={state} onChange={(e) => setState(e.target.value)}>
+                  <option value="">Select State</option>
+                  {INDIAN_STATES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                </select>
+              </div>
+              <div className="form-group mb-4">
+                <label className="form-label">District / City</label>
+                <input type="text" className="form-input" placeholder="e.g. Gumla" value={district} onChange={(e) => setDistrict(e.target.value)} />
               </div>
             </div>
           )}

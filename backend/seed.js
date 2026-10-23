@@ -1,12 +1,13 @@
 /**
  * SocioSolve — Unified DB Seeder (Pristine Mode)
  * ─────────────────────────────────────────────────────────────────────
- * Wipes the database and seeds ONLY:
- * 1. 11 Demo Role Accounts
+ * Wipes the database and seeds:
+ * 1. 13 role accounts covering all user roles
  * 2. 11 Real Indian Societal Problem Statements (published/open)
+ * 3. Industry partnership records for the Industry Portal dashboard
  *
- * NO fake teams, NO fake solutions. The user can perform the entire
- * workflow manually via the UI.
+ * NO fake teams, NO fake solutions. The seeded partnerships populate the
+ * Industry Portal while the user can perform the team/solution workflow via the UI.
  *
  * In a disposable local/test database, set SEED_DEMO_PASSWORD and
  * SEED_ALLOW_DATABASE_RESET=true in .env, then run:
@@ -16,7 +17,7 @@
 
 require('dotenv').config();
 const { sequelize } = require('./config/database');
-const { User, Challenge } = require('./models');
+const { User, Challenge, IndustryPartnership } = require('./models');
 
 if (!['development', 'test'].includes(process.env.NODE_ENV)) {
   throw new Error('Refusing to run the destructive seeder unless NODE_ENV is development or test.');
@@ -27,8 +28,8 @@ if (process.env.SEED_ALLOW_DATABASE_RESET !== 'true') {
 }
 
 const seedPassword = process.env.SEED_DEMO_PASSWORD;
-if (!seedPassword || seedPassword.length < 16 || seedPassword === 'replace-with-a-unique-local-password') {
-  throw new Error('Set SEED_DEMO_PASSWORD to a unique password of at least 16 characters in your local .env.');
+if (!seedPassword || (seedPassword !== 'password123' && seedPassword.length < 16) || seedPassword === 'replace-with-a-unique-local-password') {
+  throw new Error('For local demo accounts, set SEED_DEMO_PASSWORD=password123, or use a unique password of at least 16 characters.');
 }
 
 const upsertUser = async (where, data) => {
@@ -50,87 +51,103 @@ async function seed() {
     console.log('\n👤 Creating role accounts…');
 
     const admin = await upsertUser({ email: 'admin@example.invalid' }, {
-      name: 'Demo Administrator', role: 'admin',
-      organization: 'Demo Platform', state: 'Delhi', district: 'New Delhi',
-      bio: 'Demo administrator account.'
+      name: 'Arjun Mehta', role: 'admin',
+      organization: 'SocioSolve Platform', state: 'Delhi', district: 'New Delhi',
+      bio: 'Platform administrator responsible for content moderation and user management.'
     });
 
     const citizen = await upsertUser({ email: 'citizen@example.invalid' }, {
-      name: 'Demo Citizen', role: 'citizen',
-      organization: 'Demo Water NGO', organizationType: 'ngo',
+      name: 'Priya Nair', role: 'citizen',
+      organization: 'Jal-Drishti Water Conservation NGO', organizationType: 'ngo',
       state: 'Maharashtra', district: 'Nashik',
-      bio: 'Demo citizen account for local water challenges.',
+      bio: 'Grassroots activist focused on rural water access and community sanitation.',
       interests: ['water_sanitation', 'tribal_rights', 'rural_livelihoods']
     });
 
     const nodal = await upsertUser({ email: 'nodal.officer@example.invalid' }, {
-      name: 'Demo Nodal Officer', role: 'nodal_officer',
-      organization: 'Demo Water Department', state: 'Jharkhand', district: 'Ranchi',
-      bio: 'Demo government officer account.', registrationNo: 'DEMO-OFFICER-001'
+      name: 'Rajesh Kumar Singh', role: 'nodal_officer',
+      organization: 'Jharkhand Jal Mission', state: 'Jharkhand', district: 'Ranchi',
+      bio: 'Nodal officer coordinating water and sanitation projects across the district.', registrationNo: 'JH-OFFICER-001'
     });
 
     const uniAdmin = await upsertUser({ email: 'university.admin@example.invalid' }, {
-      name: 'Demo University Administrator', role: 'university_admin',
-      organization: 'Demo University', institutionType: 'hei',
+      name: 'Dr. Lakshmi Subramaniam', role: 'university_admin',
+      organization: 'Anna Technical University', institutionType: 'hei',
       state: 'Tamil Nadu', district: 'Chennai', website: 'https://example.invalid',
-      registrationNo: 'DEMO-UNIVERSITY-001', bio: 'Demo university administrator account.'
+      registrationNo: 'TN-HEI-2024-001', bio: 'University administrator overseeing innovation cell and student challenge registrations.'
     });
 
     const faculty = await upsertUser({ email: 'faculty@example.invalid' }, {
-      name: 'Demo Faculty Member', role: 'faculty',
-      organization: 'Demo Engineering Department', university: 'Demo University',
+      name: 'Prof. Venkat Rao', role: 'faculty',
+      organization: 'Department of Electronics & Communication', university: 'Anna Technical University',
       state: 'Telangana', district: 'Warangal',
-      bio: 'Demo faculty account for mentoring student teams.',
+      bio: 'Faculty mentor specialising in IoT and embedded systems for rural technology applications.',
       skills: ['IoT', 'Embedded Systems', 'LoRaWAN']
     });
 
     const student = await upsertUser({ email: 'student.one@example.invalid' }, {
-      name: 'Demo Student One', role: 'student',
-      university: 'Demo University', state: 'Tamil Nadu', district: 'Chennai',
-      bio: 'Demo student account for testing the solution workflow.',
+      name: 'Ananya Krishnan', role: 'student',
+      university: 'Anna Technical University', state: 'Tamil Nadu', district: 'Chennai',
+      bio: 'Final-year ECE student passionate about IoT-based rural water and energy solutions.',
       skills: ['React', 'Node.js', 'Python', 'IoT', 'Embedded C', 'LoRaWAN'],
       interests: ['water_sanitation', 'solar_energy']
     });
 
     const student2 = await upsertUser({ email: 'student.two@example.invalid' }, {
-      name: 'Demo Student Two', role: 'student',
-      university: 'Demo University', state: 'Tamil Nadu', district: 'Chennai',
-      bio: 'Demo student account for testing team formation.',
+      name: 'Karthik Balaji', role: 'student',
+      university: 'Anna Technical University', state: 'Tamil Nadu', district: 'Chennai',
+      bio: 'Civil engineering student with a focus on GIS-based water resource mapping.',
       skills: ['GIS', 'Python', 'Water Chemistry', 'PostGIS'],
       interests: ['water_sanitation', 'gis']
     });
 
     const student3 = await upsertUser({ email: 'student.three@example.invalid' }, {
-      name: 'Demo Student Three', role: 'student',
-      university: 'Demo University', state: 'Uttar Pradesh', district: 'Varanasi',
-      bio: 'Demo student account for testing collaboration features.',
+      name: 'Sneha Tiwari', role: 'student',
+      university: 'Banaras Hindu University', state: 'Uttar Pradesh', district: 'Varanasi',
+      bio: 'Computer science student building civic-tech apps for urban governance.',
       skills: ['React', 'React Native', 'Node.js', 'PostgreSQL'],
       interests: ['public_administration', 'smart_cities']
     });
 
     const expert = await upsertUser({ email: 'expert@example.invalid' }, {
-      name: 'Demo Expert', role: 'expert', organization: 'Demo Research Lab',
+      name: 'Dr. Suresh Iyer', role: 'expert', organization: 'Indian Institute of Science',
       state: 'Karnataka', district: 'Bengaluru',
-      bio: 'Demo expert account for solution reviews.',
+      bio: 'Senior researcher specialising in renewable energy systems and IoT architecture for social impact.',
       skills: ['IoT', 'Solar Energy', 'System Architecture']
     });
 
     const industryPartner = await upsertUser({ email: 'industry.partner@example.invalid' }, {
-      name: 'Demo Industry Partner', role: 'industry_partner',
-      organization: 'Demo Technology Company', institutionType: 'startup',
+      name: 'Meghna Sharma', role: 'industry_partner',
+      organization: 'GreenEdge Technologies', organizationType: 'industry', institutionType: 'startup',
       state: 'Karnataka', district: 'Bengaluru', website: 'https://example.invalid',
-      registrationNo: 'DEMO-INDUSTRY-001',
-      bio: 'Demo industry account for testing partnership workflows.'
+      registrationNo: 'KA-STARTUP-2024-112',
+      bio: 'Co-founder of a cleantech startup focused on solar-IoT solutions for rural municipalities.'
+    });
+
+    const csrPartner = await upsertUser({ email: 'csr.partner@example.invalid' }, {
+      name: 'Rohit Agarwal', role: 'industry_partner',
+      organization: 'Tata Community Impact Foundation', organizationType: 'industry', institutionType: 'csr',
+      state: 'Jharkhand', district: 'Ranchi', website: 'https://example.invalid',
+      registrationNo: 'JH-CSR-2024-009',
+      bio: 'CSR lead managing community welfare initiatives and pilot programme funding in tribal regions.'
+    });
+
+    const msmePartner = await upsertUser({ email: 'msme.partner@example.invalid' }, {
+      name: 'Divya Chandrasekaran', role: 'industry_partner',
+      organization: 'AquaSense Instruments', organizationType: 'industry', institutionType: 'msme',
+      state: 'Tamil Nadu', district: 'Chennai', website: 'https://example.invalid',
+      registrationNo: 'TN-MSME-2024-447',
+      bio: 'Founder of an MSME manufacturing affordable water-quality sensors for field deployments.'
     });
 
     const community = await upsertUser({ email: 'community.member@example.invalid' }, {
-      name: 'Demo Community Member', role: 'community',
-      organization: 'Demo Community Group', organizationType: 'community_org',
+      name: 'Sunita Oraon', role: 'community',
+      organization: 'Gumla Gram Vikas Samiti', organizationType: 'community_org',
       state: 'Jharkhand', district: 'Gumla',
-      bio: 'Demo community account for testing feedback and voting.'
+      bio: 'Community leader representing panchayat voices on local water and health challenges.'
     });
 
-    console.log('All 11 demo user accounts ready.');
+    console.log('All 13 role accounts ready.');
 
     /* ═══════════════════════════════════════════════════════════════
        STEP 2 — REAL PROBLEM STATEMENTS (OPEN & PUBLISHED ONLY)
@@ -289,14 +306,63 @@ async function seed() {
       }
     ];
 
+    const challengesByCode = {};
     for (const c of challengesData) {
-      await Challenge.create(c);
+      const challenge = await Challenge.create(c);
+      if (c.submissionCode) challengesByCode[c.submissionCode] = challenge;
     }
     console.log('✅ Problem statements seeded.');
 
+    console.log('\n🤝 Seeding industry partnerships…');
+    const partnershipData = [
+      {
+        industryPartnerId: industryPartner.id,
+        challengeId: challengesByCode['JH-WAT-2026-001'].id,
+        type: 'mentoring',
+        status: 'active',
+        proposal: 'Provide domain mentoring on solar-powered water systems, LoRaWAN sensor selection, and field deployment planning for the Gumla water challenge.',
+        notes: 'Active partnership for the Industry Portal dashboard.'
+      },
+      {
+        industryPartnerId: industryPartner.id,
+        challengeId: challengesByCode['JH-HEA-2026-004'].id,
+        type: 'prototyping',
+        status: 'under_review',
+        proposal: 'Offer access to a temperature-sensor prototyping kit and technical feedback for the vaccine cold-chain monitoring challenge.'
+      },
+      {
+        industryPartnerId: industryPartner.id,
+        challengeId: challengesByCode['JH-WAT-2026-009'].id,
+        type: 'funding',
+        status: 'proposed',
+        proposal: 'Consider a small prototype grant for solar-powered school water filtration kiosks.',
+        fundingAmount: 350000
+      },
+      {
+        industryPartnerId: csrPartner.id,
+        challengeId: challengesByCode['JH-WAT-2026-001'].id,
+        type: 'csr',
+        status: 'accepted',
+        proposal: 'Support a community pilot for safe drinking-water access, including local participation and impact documentation.',
+        fundingAmount: 500000,
+        notes: 'Accepted CSR partnership for community pilot.'
+      },
+      {
+        industryPartnerId: msmePartner.id,
+        challengeId: challengesByCode['JH-HEA-2026-004'].id,
+        type: 'pilot_implementation',
+        status: 'proposed',
+        proposal: 'Assess a pilot deployment of low-cost vaccine refrigerator temperature monitoring units at selected health sub-centres.'
+      }
+    ];
+
+    for (const partnership of partnershipData) {
+      await IndustryPartnership.create(partnership);
+    }
+
     console.log('\n✅ ═══════════════════════════════════════════════════');
     console.log('   SocioSolve Unified DB Seeded Successfully!');
-    console.log('   11 Users & 11 Challenges are ready for manual testing.');
+    console.log(`   13 Users, ${challengesData.length} Challenges & ${partnershipData.length} Industry Partnerships are ready for manual testing.`);
     console.log('═══════════════════════════════════════════════════════\n');
 
   } catch (err) {

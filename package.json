@@ -8,6 +8,7 @@
     "dev": "nodemon backend/server.js",
     "server": "nodemon backend/server.js",
     "client": "npm --prefix client run dev",
+    "seed:demo-accounts": "node backend/seedDemoAccounts.js",
     "client:build": "npm --prefix client run build",
     "start": "node backend/server.js"
   },

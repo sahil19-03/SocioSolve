@@ -6,30 +6,55 @@ import {
   ShieldCheck, CheckCircle2, AlertTriangle, Clock, Building2,
   MapPin, Users, HelpCircle, Send, ArrowRight, Eye, RefreshCw,
   FileText, ExternalLink, X, AlertCircle, Sparkles, Filter, Check, ThumbsUp, ThumbsDown,
-  GraduationCap, Lightbulb, Rocket, Award, HeartHandshake
+  GraduationCap, Lightbulb, Rocket, Award, HeartHandshake, Target, ChevronRight, Flag
 } from 'lucide-react';
 
-const JHARKHAND_DEPTS = [
+const COMMON_STATE_DEPTS = [
   'Drinking Water & Sanitation Department',
   'Department of Higher & Technical Education',
-  'Department of Agriculture & Animal Husbandry',
-  'Department of Rural Development',
-  'Department of Health, Medical Education & Family Welfare',
-  'Urban Development & Housing Department',
-  'Department of Energy & Renewable Energy',
-  'Department of Forest, Environment & Climate Change',
+  'Department of Agriculture & Farmers Welfare',
+  'Department of Rural Development & Panchayati Raj',
+  'Department of Health & Family Welfare',
+  'Urban Development & Municipal Administration',
+  'Department of Energy & Renewable Resources',
+  'Department of Environment, Forest & Climate Change',
   'Department of Information Technology & e-Governance',
-  'Department of Women, Child Development & Social Security'
+  'Department of Social Welfare & Women Empowerment',
+  'Public Works Department (PWD)',
+  'Department of Science & Technology'
 ];
+
+function getStateDepartments(stateName) {
+  const state = (stateName || '').trim();
+  if (state.toLowerCase() === 'jharkhand') {
+    return [
+      'Drinking Water & Sanitation Department',
+      'Department of Higher & Technical Education',
+      'Department of Agriculture & Animal Husbandry',
+      'Department of Rural Development',
+      'Department of Health, Medical Education & Family Welfare',
+      'Urban Development & Housing Department',
+      'Department of Energy & Renewable Energy',
+      'Department of Forest, Environment & Climate Change',
+      'Department of Information Technology & e-Governance',
+      'Department of Women, Child Development & Social Security'
+    ];
+  }
+  if (!state) return COMMON_STATE_DEPTS;
+  return COMMON_STATE_DEPTS.map(d => `${d} (${state})`).concat(COMMON_STATE_DEPTS);
+}
 
 export default function NodalOfficerDashboard() {
   const { user } = useAuth();
   const toast = useToast();
+  const stateDepts = getStateDepartments(user?.state);
 
-  const [activeTab, setActiveTab] = useState('queue'); // 'queue', 'verified', 'claims', 'proposals', 'all'
+  const [activeTab, setActiveTab] = useState('queue'); // 'queue', 'verified', 'claims', 'proposals', 'pilots', 'impact', 'milestones', 'all'
   const [challenges, setChallenges] = useState([]);
   const [pendingClaims, setPendingClaims] = useState([]);
   const [pendingProposals, setPendingProposals] = useState([]);
+  const [stateMilestones, setStateMilestones] = useState([]);
+  const [expandedMsTeam, setExpandedMsTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -70,17 +95,19 @@ export default function NodalOfficerDashboard() {
 
   const fetchAllData = async () => {
     try {
-      const [queueRes, claimsRes, propRes, pilotRes] = await Promise.all([
+      const [queueRes, claimsRes, propRes, pilotRes, msRes] = await Promise.all([
         api.get('/challenges/verification-queue').catch(() => ({ success: true, data: [] })),
         api.get('/challenges/pending-assignments').catch(() => ({ success: true, data: [] })),
         api.get('/solutions/proposals-for-review').catch(() => ({ success: true, data: [] })),
-        api.get('/solutions/pilot-requests').catch(() => ({ success: true, data: [] }))
+        api.get('/solutions/pilot-requests').catch(() => ({ success: true, data: [] })),
+        api.get('/milestones/university-teams').catch(() => ({ success: true, data: [] }))
       ]);
 
       if (queueRes.success && queueRes.data) setChallenges(queueRes.data);
       if (claimsRes.success && claimsRes.data) setPendingClaims(claimsRes.data);
       if (propRes.success && propRes.data) setPendingProposals(propRes.data);
       if (pilotRes.success && pilotRes.data) setPilotRequests(pilotRes.data);
+      if (msRes.success && msRes.data) setStateMilestones(msRes.data);
     } catch (err) {
       console.error('Error fetching queues and proposals:', err);
       toast.error('Failed to load dashboard data.');
@@ -149,7 +176,7 @@ export default function NodalOfficerDashboard() {
     setModalMode(mode);
     setNodalNotes('');
     setRejectionReason('');
-    setResponsibleDept(challenge.responsibleDepartment || user?.organization || JHARKHAND_DEPTS[0]);
+    setResponsibleDept(challenge.responsibleDepartment || user?.organization || stateDepts[0]);
     setPriorityScore(challenge.priorityScore || 8);
     setReviewDeadline(challenge.reviewDeadline ? challenge.reviewDeadline.split('T')[0] : '');
     setDomainExpertiseInput(Array.isArray(challenge.domainExpertise) ? challenge.domainExpertise.join(', ') : '');
@@ -407,6 +434,7 @@ export default function NodalOfficerDashboard() {
           >
             All Submissions ({challenges.length})
           </button>
+
         </div>
 
         {/* Submissions List */}
@@ -985,18 +1013,20 @@ export default function NodalOfficerDashboard() {
               {modalMode === 'publish' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <label className="form-label">Responsible Government Department</label>
+                    <label className="form-label">
+                      Responsible Government Department {user?.state ? `(${user.state})` : ''}
+                    </label>
                     <input
                       type="text"
                       list="deptList"
                       className="form-control"
                       value={responsibleDept}
                       onChange={(e) => setResponsibleDept(e.target.value)}
-                      placeholder="Select or enter Department..."
+                      placeholder="Select from state departments or type..."
                       required
                     />
                     <datalist id="deptList">
-                      {JHARKHAND_DEPTS.map((dept, i) => (
+                      {stateDepts.map((dept, i) => (
                         <option key={i} value={dept} />
                       ))}
                     </datalist>
@@ -1299,6 +1329,8 @@ export default function NodalOfficerDashboard() {
             </div>
           </div>
         )}
+
+
 
       </div>
     </div>

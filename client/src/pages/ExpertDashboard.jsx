@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api, utils } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import {
   Award, Star, CheckCircle, ExternalLink, Sliders, AlertTriangle,
   ShieldCheck, ShieldAlert, Cpu, HeartHandshake, Rocket, Check, X,
-  FileText, Users, Building2, RefreshCw
+  FileText, Users, Building2, RefreshCw, Target, Compass, Handshake, ArrowRight
 } from 'lucide-react';
 
 export default function ExpertDashboard() {
@@ -151,6 +152,63 @@ export default function ExpertDashboard() {
             {avgScore} / 100
           </div>
         </div>
+      </div>
+
+      {/* Discovery Hub Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <Link to="/milestones" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(167,139,250,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(167,139,250,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+                <Target size={22} />
+              </div>
+              <span className="badge badge-purple">Milestone Rubrics</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Milestone Tracker</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Review student progress reports, deliverable submissions, and technical milestones.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#a78bfa', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            Open Milestone Tracker <ArrowRight size={14} />
+          </div>
+        </Link>
+
+        <Link to="/explore" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(6,182,212,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(6,182,212,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                <Compass size={22} />
+              </div>
+              <span className="badge badge-cyan">Societal Catalog</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Explore Challenges</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Discover problems matching your technical domain and mentor student innovators.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#06b6d4', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            Browse Catalog <ArrowRight size={14} />
+          </div>
+        </Link>
+
+        <Link to="/industry" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(245,158,11,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
+                <Handshake size={22} />
+              </div>
+              <span className="badge badge-amber">Tech Transfer</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Industry & Ecosystem</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Explore industry sponsorships, IP licensing pathways, and commercial pilots.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f59e0b', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            View Industry Portal <ArrowRight size={14} />
+          </div>
+        </Link>
       </div>
 
       {/* Solutions List */}

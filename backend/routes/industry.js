@@ -90,13 +90,22 @@ router.put('/partnerships/:id', protect, async (req, res) => {
     const { status, notes, agreementUrl } = req.body;
     await partnership.update({ status, notes, agreementUrl });
 
-    // Notify the industry partner when accepted
+    // Notify the industry partner when accepted or rejected
     if (status === 'accepted') {
       await createNotification({
         userId: partnership.industryPartnerId,
         type: 'partnership_accepted',
         title: 'Partnership Accepted',
         message: `Your ${partnership.type} partnership for "${partnership.Challenge.title}" has been accepted.`,
+        relatedId: partnership.id,
+        relatedType: 'partnership'
+      });
+    } else if (status === 'rejected') {
+      await createNotification({
+        userId: partnership.industryPartnerId,
+        type: 'partnership_rejected',
+        title: 'Partnership Proposal Update',
+        message: `Your ${partnership.type} partnership proposal for "${partnership.Challenge.title}" was not approved.${notes ? ` Note: ${notes}` : ''}`,
         relatedId: partnership.id,
         relatedType: 'partnership'
       });

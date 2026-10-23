@@ -80,7 +80,7 @@ router.get('/my-team', protect, async (req, res) => {
 router.get('/team/:teamId', protect, async (req, res) => {
   try {
     const { allowed } = await isMemberOrLead(req.params.teamId, req.user.id);
-    if (!allowed && req.user.role !== 'admin' && req.user.role !== 'nodal_officer') {
+    if (!allowed && req.user.role !== 'admin' && req.user.role !== 'nodal_officer' && req.user.role !== 'university_admin') {
       return res.status(403).json({ success: false, message: 'Not a team member' });
     }
 
@@ -137,6 +137,60 @@ router.get('/faculty-teams', protect, authorize('faculty', 'admin'), async (req,
     }));
 
     res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─── GET /api/milestones/university-teams ─── University Admin sees all campus teams ──
+router.get('/university-teams', protect, authorize('university_admin', 'admin'), async (req, res) => {
+  try {
+    // Find all teams where the leader belongs to the same university as the admin
+    const university = req.user.university;
+    if (!university && req.user.role !== 'admin') {
+      return res.status(400).json({ success: false, message: 'University not set on your profile' });
+    }
+
+    // Get all leaders from the same university
+    const universityUsers = university
+      ? await User.findAll({ where: { university }, attributes: ['id'] })
+      : [];
+    const universityUserIds = universityUsers.map(u => u.id);
+
+    const whereTeam = university
+      ? { leaderId: { [Op.in]: universityUserIds } }
+      : {};
+
+    const teams = await Team.findAll({
+      where: whereTeam,
+      include: [
+        { model: User, as: 'leader', attributes: ['id', 'name', 'university', 'email'] },
+        { model: User, as: 'facultyMentor', attributes: ['id', 'name'] },
+        { model: Challenge, attributes: ['id', 'title', 'category'] },
+        {
+          model: Milestone,
+          as: 'milestones',
+          include: [{ model: User, as: 'approvedBy', attributes: ['id', 'name'] }]
+        }
+      ]
+    });
+
+    const result = teams.map(t => ({
+      teamId: t.id,
+      teamName: t.name,
+      leader: t.leader,
+      facultyMentor: t.facultyMentor,
+      challenge: t.Challenge,
+      milestones: t.milestones || [],
+      stats: {
+        total: t.milestones?.length || 0,
+        done: t.milestones?.filter(m => m.status === 'completed').length || 0,
+        overdue: t.milestones?.filter(m => m.status === 'overdue').length || 0,
+        pending: t.milestones?.filter(m => m.status === 'pending' || m.status === 'in_progress').length || 0
+      }
+    }));
+
+    res.json({ success: true, data: result, university });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -304,35 +358,46 @@ router.put('/:id/validate', protect, authorize('faculty', 'admin'), async (req, 
   }
 });
 
-// ─── PUT /api/milestones/:id ─── General update (admin/leader/mentor) ────
+// ─── PUT /api/milestones/:id ─── General update (admin/leader/mentor/expert) ──
 router.put('/:id', protect, async (req, res) => {
   try {
     const milestone = await Milestone.findByPk(req.params.id, {
-      include: [{ model: Team, attributes: ['id', 'leaderId', 'facultyMentorId'] }]
+      include: [{ model: Team, attributes: ['id', 'leaderId', 'facultyMentorId', 'industryExpertId'] }]
     });
     if (!milestone) return res.status(404).json({ success: false, message: 'Milestone not found' });
 
     const team = milestone.Team;
     const isLeader = team.leaderId === req.user.id;
     const isMentor = team.facultyMentorId === req.user.id;
+    const isExpert = team.industryExpertId === req.user.id;
     const isAdmin  = req.user.role === 'admin';
-    if (!isLeader && !isMentor && !isAdmin) {
+    if (!isLeader && !isMentor && !isExpert && !isAdmin) {
       return res.status(403).json({ success: false, message: 'Unauthorised' });
     }
 
     const { title, description, dueDate, status, deliverables, mentorFeedback, attachments, orderIndex } = req.body;
     const updates = {};
-    if (title !== undefined) updates.title = title;
-    if (description !== undefined) updates.description = description;
-    if (dueDate !== undefined) updates.dueDate = dueDate;
-    if (status !== undefined) updates.status = status;
+    if (title !== undefined)        updates.title = title;
+    if (description !== undefined)  updates.description = description;
+    if (dueDate !== undefined)      updates.dueDate = dueDate;
     if (deliverables !== undefined) updates.deliverables = deliverables;
-    if (mentorFeedback !== undefined) updates.mentorFeedback = mentorFeedback;
-    if (attachments !== undefined) updates.attachments = attachments;
-    if (orderIndex !== undefined) updates.orderIndex = orderIndex;
+    if (attachments !== undefined)  updates.attachments = attachments;
+    if (orderIndex !== undefined)   updates.orderIndex = orderIndex;
 
-    // Auto-set completedAt
-    if (status === 'completed' && !milestone.completedAt) {
+    // Only faculty mentor or admin can update status / mentorFeedback or approve completion
+    if (isMentor || isAdmin || isLeader) {
+      if (status !== undefined) updates.status = status;
+      if (mentorFeedback !== undefined) updates.mentorFeedback = mentorFeedback;
+    } else if (status !== undefined) {
+      // Industry Expert attempted a status change — block it
+      return res.status(403).json({
+        success: false,
+        message: 'Industry experts can update milestone details but cannot change status. Use the progress endpoint instead.'
+      });
+    }
+
+    // Auto-set completedAt when status promoted to completed
+    if (updates.status === 'completed' && !milestone.completedAt) {
       updates.completedAt = new Date();
       updates.approvedById = req.user.id;
 

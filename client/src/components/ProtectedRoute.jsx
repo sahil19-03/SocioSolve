@@ -3,10 +3,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
-  const { user, isLoggedIn, loading } = useAuth();
+  const { user, isLoggedIn, loading, token } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Show spinner while verifying an existing session token
+  if (loading && token) {
     return (
       <div className="container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>

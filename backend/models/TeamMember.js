@@ -19,6 +19,14 @@ const TeamMember = sequelize.define('TeamMember', {
   status: {
     type: DataTypes.ENUM('pending', 'active', 'removed'),
     defaultValue: 'active'
+  },
+  skillRole: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  requestMessage: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   timestamps: true

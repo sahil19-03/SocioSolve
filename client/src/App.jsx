@@ -26,6 +26,7 @@ import MilestoneTracker from './pages/MilestoneTracker';
 import IndustryPortal from './pages/IndustryPortal';
 import UniversityAdminDashboard from './pages/UniversityAdminDashboard';
 import NodalOfficerDashboard from './pages/NodalOfficerDashboard';
+import CommunityDashboard from './pages/CommunityDashboard';
 import Profile from './pages/Profile';
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/dashboard/faculty" element={<ProtectedRoute allowedRoles={['faculty','admin']}><FacultyDashboard /></ProtectedRoute>} />
           <Route path="/dashboard/expert" element={<ProtectedRoute allowedRoles={['expert','admin']}><ExpertDashboard /></ProtectedRoute>} />
           <Route path="/dashboard/university" element={<ProtectedRoute allowedRoles={['university_admin','admin']}><UniversityAdminDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/community" element={<ProtectedRoute allowedRoles={['community','citizen','admin']}><CommunityDashboard /></ProtectedRoute>} />
 
           <Route path="/industry" element={<ProtectedRoute allowedRoles={['industry_partner','admin']}><IndustryPortal /></ProtectedRoute>} />
           <Route path="/milestones" element={<ProtectedRoute><MilestoneTracker /></ProtectedRoute>} />

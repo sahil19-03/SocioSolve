@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api, utils } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Handshake, Building2, ArrowRight, Plus, CheckCircle2, Clock } from 'lucide-react';
+import { Handshake, Building2, ArrowRight, Plus, CheckCircle2, Clock, Award, ShieldCheck, Sparkles } from 'lucide-react';
 
 const PARTNERSHIP_TYPES = [
   { id: 'mentoring',           label: 'Mentoring',            icon: '🎓', desc: 'Provide domain expertise and guidance to student teams' },
@@ -26,9 +26,10 @@ const STATUS_BADGE = {
 export default function IndustryPortal() {
   const { user } = useAuth();
   const toast = useToast();
-  const [tab, setTab] = useState('browse'); // 'browse' | 'my' | 'propose'
+  const [tab, setTab] = useState('browse'); // 'browse' | 'certified' | 'my' | 'propose'
   const [challenges, setChallenges] = useState([]);
   const [partnerships, setPartnerships] = useState([]);
+  const [certifiedPrototypes, setCertifiedPrototypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Propose form
@@ -41,12 +42,14 @@ export default function IndustryPortal() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [chRes, ptRes] = await Promise.all([
+        const [chRes, ptRes, protoRes] = await Promise.all([
           api.get('/industry/challenges'),
-          api.get('/industry/partnerships')
+          api.get('/industry/partnerships'),
+          api.get('/industry/certified-prototypes')
         ]);
         if (chRes.success) setChallenges(chRes.data);
         if (ptRes.success) setPartnerships(ptRes.data);
+        if (protoRes.success) setCertifiedPrototypes(protoRes.data || []);
       } catch (err) { console.warn(err); }
       setLoading(false);
     };
@@ -99,14 +102,20 @@ export default function IndustryPortal() {
         </div>
 
         {/* Tab Bar */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--border-color)', paddingBottom: 0 }}>
-          {[['browse', '🔍 Browse Challenges'], ['propose', '➕ Propose Partnership'], ['my', '📋 My Partnerships']].map(([id, label]) => (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 28, borderBottom: '1px solid var(--border-color)', paddingBottom: 0, overflowX: 'auto' }}>
+          {[
+            ['browse', '🔍 Browse Challenges'],
+            ['certified', `⭐ Certified Prototypes ${certifiedPrototypes.length > 0 ? `(${certifiedPrototypes.length})` : ''}`],
+            ['propose', '➕ Propose Partnership'],
+            ['my', `📋 My Partnerships ${partnerships.length > 0 ? `(${partnerships.length})` : ''}`]
+          ].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)} className="btn btn-ghost btn-sm" style={{
               borderRadius: '8px 8px 0 0',
               borderBottom: tab === id ? '2px solid var(--color-primary-500)' : '2px solid transparent',
               color: tab === id ? 'var(--color-primary-400)' : 'var(--text-secondary)',
               fontWeight: tab === id ? 700 : 500,
-              paddingBottom: 12
+              paddingBottom: 12,
+              whiteSpace: 'nowrap'
             }}>{label}</button>
           ))}
         </div>
@@ -145,6 +154,98 @@ export default function IndustryPortal() {
                   <button className="btn btn-outline btn-sm w-full" onClick={() => { setSelectedChallenge(ch.id); setTab('propose'); }}>
                     <Handshake size={14} /> Propose Partnership
                   </button>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* Certified Prototypes Tab */}
+        {tab === 'certified' && (
+          loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+              {[1, 2, 3].map(n => <div key={n} className="card p-6" style={{ height: 220 }}><div className="skeleton" style={{ height: '100%' }} /></div>)}
+            </div>
+          ) : certifiedPrototypes.length === 0 ? (
+            <div className="card p-8" style={{ textAlign: 'center' }}>
+              <Award size={48} color="#f59e0b" style={{ margin: '0 auto 16px' }} />
+              <h3>No Certified Prototypes Yet</h3>
+              <p className="text-muted">Prototypes evaluated and certified by domain experts will appear here for CSR funding, pilot sponsorship, and technology transfer.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
+              {certifiedPrototypes.map(sol => (
+                <div key={sol.id} className="card card-lift p-6" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <span className="badge badge-amber" style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Award size={12} /> Score: {sol.compositeScore ?? 85}/100
+                      </span>
+                      {sol.pilotReadinessCertified && (
+                        <span className="badge badge-emerald" style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <ShieldCheck size={12} /> Pilot Certified
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 style={{ fontSize: '1.05rem', marginBottom: 6, lineHeight: 1.4 }}>
+                      {sol.title || `${sol.Challenge?.title} Solution`}
+                    </h4>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                      Challenge: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{sol.Challenge?.title}</span>
+                    </div>
+
+                    <p className="text-secondary" style={{ fontSize: '0.825rem', lineHeight: 1.5, marginBottom: 14 }}>
+                      {sol.description?.slice(0, 140)}...
+                    </p>
+
+                    {/* Rubric Breakdown */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, padding: '10px 12px', background: 'var(--bg-glass)', borderRadius: 8, marginBottom: 16 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Technical</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8' }}>{sol.technicalScore ?? (sol.feasibilityScore ? sol.feasibilityScore * 10 : 80)}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Impact</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399' }}>{sol.socialImpactScore ?? (sol.impactScore ? sol.impactScore * 10 : 80)}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Readiness</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fbbf24' }}>{sol.deploymentReadinessScore ?? (sol.innovationScore ? sol.innovationScore * 10 : 80)}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                      👥 <strong>Team:</strong> {sol.Team?.name || 'Student Team'} {sol.submittedBy?.university ? `(${sol.submittedBy.university})` : ''}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      style={{ flex: 1, fontSize: '0.8rem' }}
+                      onClick={() => {
+                        setSelectedChallenge(sol.challengeId || sol.Challenge?.id || '');
+                        setPartnerType('csr');
+                        setProposal(`We would like to propose a CSR grant / sponsorship for the prototype "${sol.title || sol.Challenge?.title}" developed by ${sol.Team?.name || 'the student team'}.`);
+                        setTab('propose');
+                      }}
+                    >
+                      🌱 CSR Sponsor
+                    </button>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      style={{ flex: 1, fontSize: '0.8rem' }}
+                      onClick={() => {
+                        setSelectedChallenge(sol.challengeId || sol.Challenge?.id || '');
+                        setPartnerType('pilot_implementation');
+                        setProposal(`We would like to support or host a field pilot implementation for prototype "${sol.title || sol.Challenge?.title}".`);
+                        setTab('propose');
+                      }}
+                    >
+                      🚀 Host Pilot
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

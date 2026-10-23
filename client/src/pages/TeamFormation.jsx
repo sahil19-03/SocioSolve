@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import {
   Users, UserPlus, Shield, Sparkles, Check, ArrowRight,
-  GraduationCap, Building2, CheckCircle2, Clock, Plus, Lightbulb
+  GraduationCap, Building2, CheckCircle2, Clock, Plus, Lightbulb,
+  Copy, Key, Send, CheckCheck, XCircle, MessageSquare
 } from 'lucide-react';
 
 const SKILL_ROLES = [
@@ -56,6 +57,20 @@ export default function TeamFormation() {
   const [newMemberRole, setNewMemberRole] = useState(SKILL_ROLES[0]);
   const [addingMember, setAddingMember] = useState(false);
   const [searchingStudents, setSearchingStudents] = useState(false);
+
+  // ─── Option 1 (Hybrid): Join with Code & Join Requests State ───
+  const [showCodeJoinModal, setShowCodeJoinModal] = useState(false);
+  const [inputCode, setInputCode] = useState('');
+  const [codeJoinRole, setCodeJoinRole] = useState(SKILL_ROLES[0]);
+  const [joiningByCode, setJoiningByCode] = useState(false);
+
+  const [showRequestJoinModal, setShowRequestJoinModal] = useState(false);
+  const [targetRequestTeam, setTargetRequestTeam] = useState(null);
+  const [requestRole, setRequestRole] = useState(SKILL_ROLES[0]);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [requestingJoin, setRequestingJoin] = useState(false);
+
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const loadData = async () => {
     try {
@@ -133,6 +148,82 @@ export default function TeamFormation() {
     } finally {
       setJoining(false);
     }
+  };
+
+  const handleJoinByCode = async (e) => {
+    e.preventDefault();
+    if (!inputCode.trim()) {
+      toast.error('Please enter a team invite code');
+      return;
+    }
+    setJoiningByCode(true);
+    try {
+      const res = await api.post('/teams/join-code', {
+        code: inputCode.trim(),
+        role: codeJoinRole
+      });
+      toast.success(res.message || 'Successfully joined squad!');
+      setShowCodeJoinModal(false);
+      setInputCode('');
+      if (res.data?.id) {
+        navigate(`/team-formation?teamId=${res.data.id}`);
+      }
+      loadData();
+    } catch (err) {
+      toast.error(err.message || 'Could not join with code');
+    } finally {
+      setJoiningByCode(false);
+    }
+  };
+
+  const handleRequestJoin = async (e) => {
+    e.preventDefault();
+    if (!targetRequestTeam) return;
+    setRequestingJoin(true);
+    try {
+      const res = await api.post(`/teams/${targetRequestTeam.id}/request-join`, {
+        role: requestRole,
+        message: requestMessage
+      });
+      toast.success(res.message || 'Join request sent!');
+      setShowRequestJoinModal(false);
+      setRequestMessage('');
+      loadData();
+    } catch (err) {
+      toast.error(err.message || 'Could not send join request');
+    } finally {
+      setRequestingJoin(false);
+    }
+  };
+
+  const handleAcceptRequest = async (userId) => {
+    if (!activeTeam) return;
+    try {
+      const res = await api.post(`/teams/${activeTeam.id}/requests/${userId}/accept`);
+      toast.success(res.message || 'Student accepted into squad!');
+      loadData();
+    } catch (err) {
+      toast.error(err.message || 'Failed to accept request');
+    }
+  };
+
+  const handleRejectRequest = async (userId) => {
+    if (!activeTeam) return;
+    try {
+      const res = await api.post(`/teams/${activeTeam.id}/requests/${userId}/reject`);
+      toast.info(res.message || 'Request declined');
+      loadData();
+    } catch (err) {
+      toast.error(err.message || 'Failed to decline request');
+    }
+  };
+
+  const copyInviteCode = () => {
+    if (!activeTeam?.joinCode) return;
+    navigator.clipboard.writeText(activeTeam.joinCode);
+    setCopiedCode(true);
+    toast.success('Squad invite code copied to clipboard!');
+    setTimeout(() => setCopiedCode(false), 2500);
   };
 
   const handleAssignMentor = async () => {
@@ -228,9 +319,22 @@ export default function TeamFormation() {
             </p>
           </div>
 
-          <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-            <UserPlus size={16} /> Launch New Squad
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowCodeJoinModal(true)}
+              className="btn btn-outline"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <Key size={16} /> Join with Code
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn btn-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <UserPlus size={16} /> Launch New Squad
+            </button>
+          </div>
         </div>
 
         {/* If viewing a single team */}
@@ -290,12 +394,114 @@ export default function TeamFormation() {
               </div>
             )}
 
+            {/* ── Option 1: Team Invite Code Bar (Leader-Only) ── */}
+            {isLeader && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)',
+                border: '1px dashed rgba(129,140,248,0.5)',
+                borderRadius: 12,
+                padding: '14px 20px',
+                marginBottom: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 14
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Key size={13} /> Squad Invite Code (Leader Only)
+                  </div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: 2, color: 'var(--text-primary)', fontFamily: 'monospace', marginTop: 2 }}>
+                    {activeTeam.joinCode || 'Generating...'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Share this code privately with students you want to fast-track into the squad.
+                  </div>
+                </div>
+                <button
+                  onClick={copyInviteCode}
+                  className="btn btn-secondary btn-sm"
+                  style={{ gap: 6, fontWeight: 600 }}
+                >
+                  {copiedCode ? <CheckCheck size={15} color="#10b981" /> : <Copy size={15} />}
+                  {copiedCode ? 'Code Copied!' : 'Copy Invite Code'}
+                </button>
+              </div>
+            )}
+
+            {/* ── Option 1: Pending Join Requests Console (Leader Review) ── */}
+            {isLeader && activeTeam.pendingRequests && activeTeam.pendingRequests.length > 0 && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: 12,
+                padding: '18px 20px',
+                marginBottom: 24
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                    <h3 style={{ fontSize: '1.05rem', margin: 0, color: '#fbbf24' }}>
+                      Pending Join Requests ({activeTeam.pendingRequests.length})
+                    </h3>
+                  </div>
+                  <span className="badge badge-amber">Leader Approval Required</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {activeTeam.pendingRequests.map(reqUser => (
+                    <div key={reqUser.id} className="card p-4" style={{ background: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div className="avatar" style={{ width: 40, height: 40 }}>
+                          {utils.initials(reqUser.name)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>{reqUser.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {reqUser.university || reqUser.email}
+                          </div>
+                          {reqUser.TeamMember?.skillRole && (
+                            <span className="badge badge-purple" style={{ marginTop: 4, display: 'inline-block' }}>
+                              Applying as: {reqUser.TeamMember.skillRole}
+                            </span>
+                          )}
+                          {reqUser.TeamMember?.requestMessage && (
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '4px 0 0', fontStyle: 'italic' }}>
+                              "{reqUser.TeamMember.requestMessage}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => handleAcceptRequest(reqUser.id)}
+                          className="btn btn-primary btn-sm"
+                          style={{ background: '#10b981', borderColor: '#10b981', gap: 4 }}
+                        >
+                          <Check size={14} /> Accept
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(reqUser.id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ color: '#f43f5e', borderColor: '#f43f5e', gap: 4 }}
+                        >
+                          <XCircle size={14} /> Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Team Members List */}
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 24, marginTop: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Team Constitution & Assigned Skills</h3>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  {(isLeader || isCoordinator) && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
+                  {isLeader && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
                     <button
                       onClick={openAddMemberModal}
                       className="btn btn-primary btn-sm"
@@ -303,12 +509,13 @@ export default function TeamFormation() {
                       <UserPlus size={14} style={{ marginRight: 4 }} /> Add Teammate
                     </button>
                   )}
-                  {!isMember && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
+                  {!isMember && !isLeader && (activeTeam.members?.length || 1) < activeTeam.maxMembers && (
                     <button
-                      onClick={() => { setTargetJoinTeamId(activeTeam.id); setShowJoinModal(true); }}
+                      onClick={() => { setTargetRequestTeam(activeTeam); setShowRequestJoinModal(true); }}
                       className="btn btn-secondary btn-sm"
+                      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
                     >
-                      <Plus size={14} style={{ marginRight: 4 }} /> Join Squad
+                      <Send size={14} /> Request to Join
                     </button>
                   )}
                 </div>
@@ -433,10 +640,11 @@ export default function TeamFormation() {
                       Dossier
                     </Link>
                     <button
-                      onClick={() => { setTargetJoinTeamId(t.id); setShowJoinModal(true); }}
+                      onClick={() => { setTargetRequestTeam(t); setShowRequestJoinModal(true); }}
                       className="btn btn-secondary btn-sm"
+                      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
                     >
-                      Join Squad
+                      <UserPlus size={14} /> Request to Join
                     </button>
                   </div>
                 </div>
@@ -711,6 +919,125 @@ export default function TeamFormation() {
                     className="btn btn-primary"
                   >
                     {addingMember ? 'Adding & Notifying...' : 'Add Teammate & Notify'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Join with Code */}
+        {showCodeJoinModal && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 20
+          }}>
+            <div className="card p-8" style={{ width: '100%', maxWidth: 480 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+                  <Key size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Join Squad with Code</h3>
+                  <p className="text-secondary" style={{ fontSize: '0.8rem', margin: 0 }}>Fast-track join using your leader's invite code</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleJoinByCode}>
+                <div className="form-group mb-4">
+                  <label className="form-label">Squad Invite Code *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. SQD-XXXX"
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value.toUpperCase())}
+                    style={{ fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: 2, fontWeight: 700 }}
+                    required
+                  />
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Ask your squad leader for their invite code (e.g. SQD-7K4M).
+                  </div>
+                </div>
+
+                <div className="form-group mb-6">
+                  <label className="form-label">Your Designated Skill Role</label>
+                  <select
+                    className="form-control"
+                    value={codeJoinRole}
+                    onChange={(e) => setCodeJoinRole(e.target.value)}
+                  >
+                    {SKILL_ROLES.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowCodeJoinModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={joiningByCode || !inputCode.trim()} className="btn btn-primary">
+                    {joiningByCode ? 'Joining...' : 'Join Squad Instantly'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Request to Join Squad */}
+        {showRequestJoinModal && targetRequestTeam && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 20
+          }}>
+            <div className="card p-8" style={{ width: '100%', maxWidth: 520 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(167,139,250,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+                  <UserPlus size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Request to Join Squad</h3>
+                  <p className="text-secondary" style={{ fontSize: '0.8rem', margin: 0 }}>
+                    Sending application to <strong>{targetRequestTeam.name}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleRequestJoin}>
+                <div className="form-group mb-4">
+                  <label className="form-label">Your Desired Engineering Role *</label>
+                  <select
+                    className="form-control"
+                    value={requestRole}
+                    onChange={(e) => setRequestRole(e.target.value)}
+                  >
+                    {SKILL_ROLES.map((r, i) => (
+                      <option key={i} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group mb-6">
+                  <label className="form-label">Note to Team Leader (Optional)</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    placeholder="Briefly state your competencies, background, or why you'd like to work on this challenge..."
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowRequestJoinModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={requestingJoin} className="btn btn-primary" style={{ background: '#8b5cf6', borderColor: '#8b5cf6' }}>
+                    {requestingJoin ? 'Submitting...' : 'Send Join Request'}
                   </button>
                 </div>
               </form>

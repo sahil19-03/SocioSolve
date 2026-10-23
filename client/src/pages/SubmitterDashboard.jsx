@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 import {
   PlusCircle, Eye, Users, Lightbulb, MapPin,
   HelpCircle, ArrowRight, RefreshCw, Clock, CheckCircle2,
-  Star, MessageSquare, Award, ThumbsUp, X
+  Star, MessageSquare, Award, ThumbsUp, X, Target, Compass
 } from 'lucide-react';
 
 const STATUS_PIPELINE = [
@@ -135,6 +135,63 @@ export default function SubmitterDashboard() {
             {stat.sub && <div className="text-secondary" style={{ fontSize: '.78rem', marginTop: 4 }}>{stat.sub}</div>}
           </div>
         ))}
+      </div>
+
+      {/* ── Discovery & Navigation Hub Cards ────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <Link to="/submit-challenge" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(16,185,129,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                <PlusCircle size={22} />
+              </div>
+              <span className="badge badge-green">Citizen Voice</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Submit a Problem</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Report a grassroots issue from your village, city ward, or local community.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            Submit Problem Now <ArrowRight size={14} />
+          </div>
+        </Link>
+
+        <Link to="/milestones" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(167,139,250,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(167,139,250,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+                <Target size={22} />
+              </div>
+              <span className="badge badge-purple">Execution Hub</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Track Milestones</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Follow student engineering progress, prototype builds, and deployment dates.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#a78bfa', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            Open Milestone Tracker <ArrowRight size={14} />
+          </div>
+        </Link>
+
+        <Link to="/explore" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(6,182,212,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(6,182,212,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                <Compass size={22} />
+              </div>
+              <span className="badge badge-cyan">Public Catalog</span>
+            </div>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Browse Challenges</h3>
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Explore what other citizens, communities, and panchayats have reported.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#06b6d4', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+            Browse Catalog <ArrowRight size={14} />
+          </div>
+        </Link>
       </div>
 
       {/* ── Submissions list ─────────────────────────────────────── */}

@@ -33,32 +33,41 @@ router.get('/proposals-for-review', protect, authorize('faculty', 'university_ad
   try {
     const where = {};
 
+    // ── Team association include (default: no filter on team) ──
+    let teamInclude = {
+      model: Team,
+      required: false,
+      include: [
+        { model: User, as: 'leader',       attributes: ['id', 'name', 'avatar', 'university', 'email'] },
+        { model: User, as: 'members',      attributes: ['id', 'name', 'avatar', 'university', 'skills'], through: { attributes: ['role'] } },
+        { model: User, as: 'facultyMentor',attributes: ['id', 'name', 'organization'] }
+      ]
+    };
+
     if (req.user.role === 'faculty') {
-      // Tier 1: Faculty Mentor sees proposals waiting for Tier 1 review
+      // Tier 1: Faculty only sees proposals from teams they personally mentor
       where.currentReviewTier = 1;
-      where.facultyApproval = 'pending';
+      where.facultyApproval   = 'pending';
+      teamInclude = {
+        ...teamInclude,
+        required: true,   // INNER JOIN — exclude solutions with no matching team
+        where: { facultyMentorId: req.user.id }
+      };
     } else if (req.user.role === 'university_admin') {
-      // Tier 2: University Coordinator sees Tier 2 proposals (Tier 1 already approved)
-      where.currentReviewTier = 2;
+      // Tier 2: University Coordinator sees proposals from their institution
+      where.currentReviewTier  = 2;
       where.universityApproval = 'pending';
     } else if (req.user.role === 'nodal_officer') {
-      // Tier 3: Govt Nodal Officer sees Tier 3 proposals (Tier 1 & 2 already approved)
+      // Tier 3: Govt Nodal Officer sees all Tier 3 pending proposals
       where.currentReviewTier = 3;
-      where.govtApproval = 'pending';
+      where.govtApproval      = 'pending';
     }
-    // Admin sees all proposals in review
+    // Admin sees all proposals in any review state (no extra filter)
 
     const proposals = await Solution.findAll({
       where,
       include: [
-        {
-          model: Team,
-          include: [
-            { model: User, as: 'leader', attributes: ['id', 'name', 'avatar', 'university', 'email'] },
-            { model: User, as: 'members', attributes: ['id', 'name', 'avatar', 'university', 'skills'], through: { attributes: ['role'] } },
-            { model: User, as: 'facultyMentor', attributes: ['id', 'name', 'organization'] }
-          ]
-        },
+        teamInclude,
         {
           model: Challenge,
           attributes: ['id', 'title', 'category', 'status', 'submissionCode', 'district', 'state', 'responsibleDepartment', 'priorityScore']
@@ -68,7 +77,7 @@ router.get('/proposals-for-review', protect, authorize('faculty', 'university_ad
       order: [['createdAt', 'DESC']]
     });
 
-    res.json({ success: true, data: proposals });
+    res.json({ success: true, count: proposals.length, data: proposals });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error.', error: error.message });
   }
@@ -382,11 +391,12 @@ router.get('/evaluation-queue', protect, authorize('expert', 'admin'), async (re
       const teamOrg = (plain.Team?.university?.organization || plain.Team?.university?.name || plain.Team?.leader?.university || '').trim().toLowerCase();
       const isMentor = plain.Team?.facultyMentorId === evaluatorId;
       const isLeader = plain.Team?.leaderId === evaluatorId;
+      const isMember = plain.Team?.members?.some(m => m.id === evaluatorId);
       const sameOrg = Boolean(evaluatorOrg && teamOrg && (evaluatorOrg.includes(teamOrg) || teamOrg.includes(evaluatorOrg)));
 
-      plain.hasConflictOfInterest = (isMentor || isLeader || sameOrg) && req.user.role !== 'admin';
+      plain.hasConflictOfInterest = (isMentor || isLeader || isMember || sameOrg) && req.user.role !== 'admin';
       plain.conflictReason = isMentor ? 'You are the faculty mentor for this team.'
-        : isLeader ? 'You are a member or leader of this team.'
+        : (isLeader || isMember) ? 'You are a member or leader of this team.'
         : sameOrg ? `Affiliated with the same institution (${teamOrg || 'HEI'}). Independent evaluation required.`
         : null;
       return plain;
@@ -500,7 +510,8 @@ router.put('/:id/evaluate', protect, authorize('expert', 'admin'), async (req, r
           model: Team,
           include: [
             { model: User, as: 'university' },
-            { model: User, as: 'leader' }
+            { model: User, as: 'leader' },
+            { model: User, as: 'members', attributes: ['id'] }
           ]
         },
         { model: Challenge }
@@ -514,9 +525,10 @@ router.put('/:id/evaluate', protect, authorize('expert', 'admin'), async (req, r
       const teamOrg = (solution.Team?.university?.organization || solution.Team?.university?.name || solution.Team?.leader?.university || '').trim().toLowerCase();
       const isMentor = solution.Team?.facultyMentorId === req.user.id;
       const isLeader = solution.Team?.leaderId === req.user.id;
+      const isMember = solution.Team?.members?.some(m => m.id === req.user.id);
       const sameOrg = Boolean(evaluatorOrg && teamOrg && (evaluatorOrg.includes(teamOrg) || teamOrg.includes(evaluatorOrg)));
 
-      if (isMentor || isLeader || sameOrg) {
+      if (isMentor || isLeader || isMember || sameOrg) {
         return res.status(403).json({
           success: false,
           message: 'Conflict of interest detected: Experts cannot evaluate prototypes from their own institution or mentored teams.'

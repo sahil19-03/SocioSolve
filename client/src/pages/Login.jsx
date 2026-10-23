@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ArrowRight, Lock, Mail, Eye, EyeOff, ChevronDown } from 'lucide-react';
 
+// Demo panel: only the email is pre-filled. Password must always be entered manually.
+
+const demoRoles = [
+  { label: 'Admin', email: 'admin@example.invalid' },
+  { label: 'Student', email: 'student.one@example.invalid' },
+  { label: 'Problem Submitter', email: 'citizen@example.invalid' },
+  { label: 'Nodal Officer', email: 'nodal.officer@example.invalid' },
+  { label: 'University Admin', email: 'university.admin@example.invalid' },
+  { label: 'Faculty', email: 'faculty@example.invalid' },
+  { label: 'Domain Expert', email: 'expert@example.invalid' },
+  { label: 'Industry Partner', email: 'industry.partner@example.invalid' },
+  { label: 'CSR Partner', email: 'csr.partner@example.invalid' },
+  { label: 'MSME Partner', email: 'msme.partner@example.invalid' },
+  { label: 'Community Member', email: 'community.member@example.invalid' },
+];
+
 export default function Login() {
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect');
   const navigate = useNavigate();
   const { login, getDashboardPath } = useAuth();
   const toast = useToast();
@@ -23,11 +37,9 @@ export default function Login() {
     try {
       const res = await login(email, password);
       toast.success(`Welcome back, ${res.user?.name || 'Innovator'}!`);
-      if (redirect) {
-        navigate(redirect);
-      } else {
-        navigate(getDashboardPath(res.user?.role));
-      }
+      // Always open the dashboard for the logged-in role,
+      // never follow a stale redirect from a previous role's session.
+      navigate(getDashboardPath(res.user?.role), { replace: true });
     } catch (err) {
       toast.error(err.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -35,18 +47,10 @@ export default function Login() {
     }
   };
 
-  // Only fills the email — user must type their own password
-  const fillEmail = (demoEmail) => setEmail(demoEmail);
-
-  const demoRoles = [
-    { label: '🛡️ Admin',        email: 'admin@sociosolve.in' },
-    { label: '🎓 Student',       email: 'aarav.sharma@student.iitm.ac.in' },
-    { label: '📢 Submitter',     email: 'sunita.deshmukh@jaldrishti.org' },
-    { label: '🏛️ Nodal Officer', email: 'nodal.water@jharkhand.gov.in' },
-    { label: '🏫 University',    email: 'coordinator@iitm.ac.in' },
-    { label: '🔬 Faculty',       email: 'faculty@nit.ac.in' },
-    { label: '⭐ Expert',        email: 'priya.narang@ecogrid.in' },
-  ];
+  // Only the email is filled — password must be entered manually.
+  const fillDemoAccount = (demoEmail) => {
+    setEmail(demoEmail);
+  };
 
   return (
     <div className="auth-page-wrapper">
@@ -140,11 +144,11 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Demo Role Email Quick-Fill — email only, no password exposed */}
+        {/* Demo accounts — email only. Password is never exposed in the UI. */}
         <details className="auth-demo-hint" style={{ marginTop: 20 }}>
           <summary>
             <ChevronDown size={14} style={{ transition: 'transform 0.2s' }} />
-            Sign in as a demo role
+            Sign in with a demo account
           </summary>
           <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {demoRoles.map(({ label, email: demoEmail }) => (
@@ -152,15 +156,15 @@ export default function Login() {
                 key={demoEmail}
                 type="button"
                 className="auth-demo-pill"
-                onClick={() => fillEmail(demoEmail)}
-                title={`Fill email: ${demoEmail}`}
+                onClick={() => fillDemoAccount(demoEmail)}
+                title={`Use ${label} account`}
               >
                 {label}
               </button>
             ))}
           </div>
           <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
-            Click a role to auto-fill the email. Enter your password manually to sign in.
+            Click a role to fill the email address, then enter the password manually and sign in.
           </p>
         </details>
 

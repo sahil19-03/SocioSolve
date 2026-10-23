@@ -46,6 +46,8 @@ export default function Sidebar() {
         return { to: '/dashboard/admin', icon: <LayoutDashboard size={18} />, label: 'Admin Console', exact: true };
       case 'industry_partner':
         return { to: '/industry', icon: <LayoutDashboard size={18} />, label: 'Industry Portal', exact: true };
+      case 'community':
+        return { to: '/dashboard/community', icon: <LayoutDashboard size={18} />, label: 'Community Dashboard', exact: true };
       default:
         return { to: '/dashboard/student', icon: <LayoutDashboard size={18} />, label: 'My Dashboard', exact: true };
     }

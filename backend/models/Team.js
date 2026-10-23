@@ -25,6 +25,10 @@ const Team = sequelize.define('Team', {
     type: DataTypes.BOOLEAN,
     defaultValue: true  // open for new members to join
   },
+  joinCode: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   status: {
     type: DataTypes.ENUM('forming', 'team_formed', 'active', 'submitted', 'completed'),
     defaultValue: 'forming'

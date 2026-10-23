@@ -64,6 +64,8 @@ export default function UniversityAdminDashboard() {
   const [claimed, setClaimed] = useState([]);
   const [campusTeams, setCampusTeams] = useState([]);
   const [proposals, setProposals] = useState([]);
+  const [universityMilestones, setUniversityMilestones] = useState([]);
+  const [expandedTeam, setExpandedTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
@@ -86,17 +88,19 @@ export default function UniversityAdminDashboard() {
       if (search) params.set('search', search);
       if (catFilter) params.set('category', catFilter);
 
-      const [avRes, clRes, tmRes, propRes] = await Promise.all([
+      const [avRes, clRes, tmRes, propRes, milRes] = await Promise.all([
         api.get(`/challenges/available-for-hei?${params}`).catch(() => ({ success: true, data: [] })),
         api.get('/challenges/claimed-by-hei').catch(() => ({ success: true, data: [] })),
         api.get('/teams/university').catch(() => ({ success: true, data: [] })),
-        api.get('/solutions/proposals-for-review').catch(() => ({ success: true, data: [] }))
+        api.get('/solutions/proposals-for-review').catch(() => ({ success: true, data: [] })),
+        api.get('/milestones/university-teams').catch(() => ({ success: true, data: [] }))
       ]);
 
       setAvailable(avRes.success ? avRes.data : []);
       setClaimed(clRes.success ? clRes.data : []);
       setCampusTeams(tmRes.success ? tmRes.data : []);
       setProposals(propRes.success ? propRes.data : []);
+      setUniversityMilestones(milRes.success ? milRes.data : []);
     } catch (err) {
       console.error('Dashboard load error:', err);
     } finally {
@@ -240,13 +244,88 @@ export default function UniversityAdminDashboard() {
           </div>
         </div>
 
+        {/* ── Discovery & Navigation Hub Cards ────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 32 }}>
+          <Link to="/team-formation" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(129,140,248,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(129,140,248,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
+                  <Users size={22} />
+                </div>
+                <span className="badge badge-purple">{campusTeams.length} Squads</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Campus Student Teams</h3>
+              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                Manage interdisciplinary squads, faculty mentors, and roster formations.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#818cf8', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+              Open Team Formation <ArrowRight size={14} />
+            </div>
+          </Link>
+
+          <Link to="/milestones" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(167,139,250,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(167,139,250,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+                  <Target size={22} />
+                </div>
+                <span className="badge badge-blue">Dedicated Tracker</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Milestone Tracker</h3>
+              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                Track deliverables, prototype pipelines, and validation across all projects.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#a78bfa', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+              Open Milestone Tracker <ArrowRight size={14} />
+            </div>
+          </Link>
+
+          <Link to="/explore" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(6,182,212,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(6,182,212,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                  <Compass size={22} />
+                </div>
+                <span className="badge badge-cyan">Full Catalog</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Explore Challenges</h3>
+              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                Browse statewide problem statements published by nodal departments.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#06b6d4', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+              Browse Catalog <ArrowRight size={14} />
+            </div>
+          </Link>
+
+          <Link to="/analytics" className="card p-5" style={{ textDecoration: 'none', transition: 'all .2s ease', border: '1px solid rgba(16,185,129,.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                  <BarChart3 size={22} />
+                </div>
+                <span className="badge badge-green">HEI Analytics</span>
+              </div>
+              <h3 style={{ fontSize: '1.05rem', marginBottom: 6, color: 'var(--text-primary)' }}>Impact & Benchmarks</h3>
+              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                Review institutional KPIs, SDG alignments, and statewide performance.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontWeight: 600, fontSize: '.82rem', marginTop: 14 }}>
+              View Analytics <ArrowRight size={14} />
+            </div>
+          </Link>
+        </div>
+
         {/* ── Tab Navigation ───────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border-color)', marginBottom: 24, paddingBottom: 8, flexWrap: 'wrap' }}>
           {[
-            { key: 'available', label: `Available Challenges (${available.length})` },
-            { key: 'claimed',   label: `Claimed Challenges (${claimed.length})` },
-            { key: 'teams',     label: `Campus Squads (${campusTeams.length})` },
-            { key: 'proposals', label: `Proposal Reviews (${proposals.length})` },
+            { key: 'available',   label: `Available Challenges (${available.length})` },
+            { key: 'claimed',     label: `Claimed Challenges (${claimed.length})` },
+            { key: 'teams',       label: `Campus Squads (${campusTeams.length})` },
+            { key: 'proposals',   label: `Proposal Reviews (${proposals.length})` },
           ].map(tab => (
             <button
               key={tab.key}
@@ -580,6 +659,8 @@ export default function UniversityAdminDashboard() {
             </div>
           </div>
         )}
+
+
 
       </div>
     </div>

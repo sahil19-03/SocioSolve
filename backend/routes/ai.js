@@ -52,7 +52,7 @@ function keywordScore(text, keywords) {
 }
 
 // ─── GET /api/ai/recommend — Challenge recommendations ────────────
-router.get('/recommend', protect, authorize('student'), async (req, res) => {
+const recommendHandler = async (req, res) => {
   try {
     const challenges = await Challenge.findAll({ where: { status: 'published' } });
     if (challenges.length === 0) {
@@ -63,7 +63,11 @@ router.get('/recommend', protect, authorize('student'), async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error.', error: error.message });
   }
-});
+};
+
+// Both /recommend and /recommendations (plural) are supported
+router.get('/recommend',      protect, authorize('student'), recommendHandler);
+router.get('/recommendations', protect, authorize('student'), recommendHandler);
 
 // ─── POST /api/ai/categorize — Auto-classify a challenge ──────────
 router.post('/categorize', protect, async (req, res) => {

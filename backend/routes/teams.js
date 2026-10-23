@@ -6,6 +6,58 @@ const { createNotification } = require('../utils/notifications');
 
 const router = express.Router();
 
+function generateJoinCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'SQD-';
+  for (let i = 0; i < 5; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// ─── GET /api/teams/my-team ─── Current user's primary active team ─────
+router.get('/my-team', protect, async (req, res) => {
+  try {
+    const membership = await TeamMember.findOne({
+      where: { UserId: req.user.id, status: 'active' },
+      attributes: ['TeamId']
+    });
+
+    const where = membership
+      ? { [Op.or]: [{ leaderId: req.user.id }, { id: membership.TeamId }] }
+      : { leaderId: req.user.id };
+
+    const team = await Team.findOne({
+      where,
+      include: [
+        { model: User, as: 'leader', attributes: ['id', 'name', 'avatar', 'university', 'email'] },
+        { model: User, as: 'members', attributes: ['id', 'name', 'avatar', 'university', 'skills'], through: { attributes: ['role', 'status', 'joinedAt', 'skillRole', 'requestMessage'] } },
+        { model: User, as: 'facultyMentor', attributes: ['id', 'name', 'organization', 'bio'] },
+        { model: Challenge, attributes: ['id', 'title', 'category', 'status', 'submissionCode'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (!team) {
+      return res.json({ success: false, message: 'No team found' });
+    }
+
+    if (!team.joinCode) {
+      team.joinCode = generateJoinCode();
+      await team.save();
+    }
+
+    const teamJson = team.toJSON();
+    const allMembers = teamJson.members || [];
+    teamJson.members = allMembers.filter(m => !m.TeamMember || m.TeamMember.status === 'active' || m.TeamMember.role === 'leader');
+    teamJson.pendingRequests = allMembers.filter(m => m.TeamMember && m.TeamMember.status === 'pending');
+
+    res.json({ success: true, data: teamJson });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
 // ─── Phase 5: GET /api/teams/my ─── Current user's teams ─────────────
 router.get('/my', protect, async (req, res) => {
   try {
@@ -121,6 +173,7 @@ router.post('/', protect, authorize('student', 'admin'), async (req, res) => {
     // Determine university affiliation: from assigned challenge or student's university
     const universityId = challenge.assignedUniversityId || challenge.institutionInterestId || null;
 
+    const joinCode = generateJoinCode();
     const team = await Team.create({
       name,
       description,
@@ -129,18 +182,19 @@ router.post('/', protect, authorize('student', 'admin'), async (req, res) => {
       maxMembers: maxMembers || 5,
       leaderId: req.user.id,
       status: 'forming',
+      joinCode,
       isApprovedByCoordinator: false
     });
 
     // Creator is automatically the team leader
-    await TeamMember.create({ TeamId: team.id, UserId: req.user.id, role: 'leader' });
+    await TeamMember.create({ TeamId: team.id, UserId: req.user.id, role: 'leader', status: 'active' });
 
     // Update challenge team count
     await challenge.increment('teamCount');
 
     res.status(201).json({
       success: true,
-      message: `Team "${team.name}" created! Next: recruit peers and link your faculty mentor.`,
+      message: `Team "${team.name}" created! Next: recruit peers or share your team code.`,
       data: team
     });
   } catch (error) {
@@ -154,7 +208,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const team = await Team.findByPk(req.params.id, {
       include: [
         { model: User, as: 'leader', attributes: ['id', 'name', 'avatar', 'university', 'email'] },
-        { model: User, as: 'members', attributes: ['id', 'name', 'avatar', 'university', 'skills'], through: { attributes: ['role', 'joinedAt'] } },
+        { model: User, as: 'members', attributes: ['id', 'name', 'avatar', 'university', 'skills'], through: { attributes: ['role', 'status', 'joinedAt', 'skillRole', 'requestMessage'] } },
         { model: User, as: 'facultyMentor', attributes: ['id', 'name', 'organization', 'bio'] },
         { model: User, as: 'industryExpert', attributes: ['id', 'name', 'organization', 'bio'] },
         { model: User, as: 'university', attributes: ['id', 'name', 'organization', 'website'] },
@@ -164,7 +218,18 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
     if (!team) return res.status(404).json({ success: false, message: 'Team not found.' });
 
-    res.json({ success: true, data: team });
+    // Ensure joinCode exists
+    if (!team.joinCode) {
+      team.joinCode = generateJoinCode();
+      await team.save();
+    }
+
+    const teamJson = team.toJSON();
+    const allMembers = teamJson.members || [];
+    teamJson.members = allMembers.filter(m => !m.TeamMember || m.TeamMember.status === 'active' || m.TeamMember.role === 'leader');
+    teamJson.pendingRequests = allMembers.filter(m => m.TeamMember && m.TeamMember.status === 'pending');
+
+    res.json({ success: true, data: teamJson });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error.', error: error.message });
   }
@@ -201,27 +266,236 @@ router.get('/available-students', protect, async (req, res) => {
   }
 });
 
-// ─── POST /api/teams/:id/join ─── Student joins a team ───────────
+// ─── POST /api/teams/join-code ─── Join team instantly using code ─────────
+router.post('/join-code', protect, authorize('student'), async (req, res) => {
+  try {
+    const { code, role } = req.body;
+    if (!code || !code.trim()) {
+      return res.status(400).json({ success: false, message: 'Please enter a team invite code.' });
+    }
+
+    const team = await Team.findOne({
+      where: { joinCode: code.toUpperCase().trim() },
+      include: [{ model: Challenge, attributes: ['id', 'title'] }]
+    });
+
+    if (!team) {
+      return res.status(404).json({ success: false, message: 'Invalid team code. No squad found with this code.' });
+    }
+
+    if (!team.isOpen) {
+      return res.status(400).json({ success: false, message: 'This squad is closed to new members.' });
+    }
+
+    const activeCount = await TeamMember.count({ where: { TeamId: team.id, status: 'active' } });
+    if (activeCount >= team.maxMembers) {
+      return res.status(400).json({ success: false, message: `Squad is full (${team.maxMembers} members).` });
+    }
+
+    const existing = await TeamMember.findOne({ where: { TeamId: team.id, UserId: req.user.id } });
+    if (existing && existing.status === 'active') {
+      return res.status(400).json({ success: false, message: 'You are already a member of this squad.' });
+    }
+
+    if (existing) {
+      await existing.update({ status: 'active', role: 'member', skillRole: role || existing.skillRole || 'Engineering Specialist' });
+    } else {
+      await TeamMember.create({
+        TeamId: team.id,
+        UserId: req.user.id,
+        role: 'member',
+        status: 'active',
+        skillRole: role || 'Engineering Specialist'
+      });
+    }
+
+    // Notify team leader
+    if (team.leaderId && team.leaderId !== req.user.id) {
+      await createNotification({
+        userId: team.leaderId,
+        type: 'team_joined',
+        title: '⚡ Squad Joined via Code',
+        message: `${req.user.name} entered your invite code and joined squad "${team.name}" as ${role || 'Engineering Specialist'}.`,
+        relatedId: team.id,
+        relatedType: 'team'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `🎉 Successfully joined squad "${team.name}"!`,
+      data: team
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
+// ─── POST /api/teams/:id/request-join ─── Solo student requests to join squad ───
+router.post('/:id/request-join', protect, authorize('student'), async (req, res) => {
+  try {
+    const { role, message } = req.body;
+    const team = await Team.findByPk(req.params.id, {
+      include: [{ model: Challenge, attributes: ['id', 'title'] }]
+    });
+
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found.' });
+    if (!team.isOpen) return res.status(400).json({ success: false, message: 'This squad is closed to new members.' });
+
+    const activeCount = await TeamMember.count({ where: { TeamId: team.id, status: 'active' } });
+    if (activeCount >= team.maxMembers) {
+      return res.status(400).json({ success: false, message: 'This squad has reached maximum capacity.' });
+    }
+
+    const existing = await TeamMember.findOne({ where: { TeamId: team.id, UserId: req.user.id } });
+    if (existing && existing.status === 'active') {
+      return res.status(400).json({ success: false, message: 'You are already an active member of this squad.' });
+    }
+    if (existing && existing.status === 'pending') {
+      return res.status(400).json({ success: false, message: 'You have already submitted a join request. Awaiting leader review.' });
+    }
+
+    if (existing) {
+      await existing.update({
+        status: 'pending',
+        role: 'member',
+        skillRole: role || 'Engineering Specialist',
+        requestMessage: message || null
+      });
+    } else {
+      await TeamMember.create({
+        TeamId: team.id,
+        UserId: req.user.id,
+        role: 'member',
+        status: 'pending',
+        skillRole: role || 'Engineering Specialist',
+        requestMessage: message || null
+      });
+    }
+
+    // Notify team leader
+    if (team.leaderId) {
+      await createNotification({
+        userId: team.leaderId,
+        type: 'team_request',
+        title: '📩 New Squad Join Request',
+        message: `${req.user.name} requested to join "${team.name}" as ${role || 'Member'}. Go to Team Formation to review.`,
+        relatedId: team.id,
+        relatedType: 'team'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Join request sent to ${team.name}'s leader! You will be notified once reviewed.`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
+// ─── POST /api/teams/:id/requests/:userId/accept ─── Leader accepts join request ───
+router.post('/:id/requests/:userId/accept', protect, async (req, res) => {
+  try {
+    const team = await Team.findByPk(req.params.id);
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found.' });
+
+    if (team.leaderId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only team leader can accept join requests.' });
+    }
+
+    const activeCount = await TeamMember.count({ where: { TeamId: team.id, status: 'active' } });
+    if (activeCount >= team.maxMembers) {
+      return res.status(400).json({ success: false, message: `Team is full (${team.maxMembers} members).` });
+    }
+
+    const member = await TeamMember.findOne({
+      where: { TeamId: team.id, UserId: req.params.userId, status: 'pending' }
+    });
+
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Pending request not found.' });
+    }
+
+    await member.update({ status: 'active' });
+
+    // Notify student
+    await createNotification({
+      userId: req.params.userId,
+      type: 'team_joined',
+      title: '🎉 Squad Request Accepted!',
+      message: `Your request to join "${team.name}" was accepted! You are now an active squad member.`,
+      relatedId: team.id,
+      relatedType: 'team'
+    });
+
+    res.json({ success: true, message: 'Student request accepted! Teammate is now active in squad.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
+// ─── POST /api/teams/:id/requests/:userId/reject ─── Leader rejects join request ───
+router.post('/:id/requests/:userId/reject', protect, async (req, res) => {
+  try {
+    const team = await Team.findByPk(req.params.id);
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found.' });
+
+    if (team.leaderId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only team leader can reject join requests.' });
+    }
+
+    const member = await TeamMember.findOne({
+      where: { TeamId: team.id, UserId: req.params.userId, status: 'pending' }
+    });
+
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Pending request not found.' });
+    }
+
+    await member.destroy();
+
+    // Notify student
+    await createNotification({
+      userId: req.params.userId,
+      type: 'team_rejected',
+      title: 'Squad Request Update',
+      message: `Your request to join "${team.name}" was declined. Feel free to explore other open squads!`,
+      relatedId: team.id,
+      relatedType: 'team'
+    });
+
+    res.json({ success: true, message: 'Request declined.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+  }
+});
+
+// ─── POST /api/teams/:id/join ─── Student joins a team directly ───────────
 router.post('/:id/join', protect, authorize('student'), async (req, res) => {
   try {
-    const { role } = req.body; // e.g. "IoT Specialist", "Frontend Lead", "Data Analyst"
+    const { role } = req.body;
     const team = await Team.findByPk(req.params.id, {
       include: [{ model: Challenge, attributes: ['id', 'title'] }]
     });
     if (!team) return res.status(404).json({ success: false, message: 'Team not found.' });
     if (!team.isOpen) return res.status(400).json({ success: false, message: 'Team is closed to new members.' });
 
-    const memberCount = await TeamMember.count({ where: { TeamId: team.id } });
-    if (memberCount >= team.maxMembers) {
+    const activeCount = await TeamMember.count({ where: { TeamId: team.id, status: 'active' } });
+    if (activeCount >= team.maxMembers) {
       return res.status(400).json({ success: false, message: 'Team is full.' });
     }
 
     const existing = await TeamMember.findOne({ where: { TeamId: team.id, UserId: req.user.id } });
-    if (existing) {
+    if (existing && existing.status === 'active') {
       return res.status(400).json({ success: false, message: 'You are already in this team.' });
     }
 
-    await TeamMember.create({ TeamId: team.id, UserId: req.user.id, role: role || 'member' });
+    if (existing) {
+      await existing.update({ status: 'active', role: 'member', skillRole: role || existing.skillRole || 'Engineering Specialist' });
+    } else {
+      await TeamMember.create({ TeamId: team.id, UserId: req.user.id, role: 'member', status: 'active', skillRole: role || 'Engineering Specialist' });
+    }
 
     // Notify team leader of new member
     if (team.leaderId && team.leaderId !== req.user.id) {
@@ -255,8 +529,8 @@ router.post('/:id/add-member', protect, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only team leader can add members directly.' });
     }
 
-    const memberCount = await TeamMember.count({ where: { TeamId: team.id } });
-    if (memberCount >= team.maxMembers) {
+    const activeCount = await TeamMember.count({ where: { TeamId: team.id, status: 'active' } });
+    if (activeCount >= team.maxMembers) {
       return res.status(400).json({ success: false, message: `Team has reached maximum capacity (${team.maxMembers} members).` });
     }
 
@@ -272,15 +546,25 @@ router.post('/:id/add-member', protect, async (req, res) => {
     }
 
     const existing = await TeamMember.findOne({ where: { TeamId: team.id, UserId: targetStudent.id } });
-    if (existing) {
-      return res.status(400).json({ success: false, message: `${targetStudent.name} is already a member of this squad.` });
+    if (existing && existing.status === 'active') {
+      return res.status(400).json({ success: false, message: `${targetStudent.name} is already an active member of this squad.` });
     }
 
-    await TeamMember.create({
-      TeamId: team.id,
-      UserId: targetStudent.id,
-      role: role || 'Engineering Specialist'
-    });
+    if (existing) {
+      await existing.update({
+        status: 'active',
+        role: 'member',
+        skillRole: role || existing.skillRole || 'Engineering Specialist'
+      });
+    } else {
+      await TeamMember.create({
+        TeamId: team.id,
+        UserId: targetStudent.id,
+        role: 'member',
+        status: 'active',
+        skillRole: role || 'Engineering Specialist'
+      });
+    }
 
     // Notify the added student immediately in database
     await createNotification({

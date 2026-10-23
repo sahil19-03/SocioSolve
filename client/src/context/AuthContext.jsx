@@ -6,7 +6,8 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('sociosolve_token'));
-  const [loading, setLoading] = useState(true);
+  // Only show a loading state if there's a saved token to verify
+  const [loading, setLoading] = useState(!!localStorage.getItem('sociosolve_token'));
 
   useEffect(() => {
     const initAuth = async () => {
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
       case 'university_admin':  return '/dashboard/university'; // dedicated HEI dashboard
       case 'nodal_officer':     return '/dashboard/nodal';      // dedicated Government Nodal Officer dashboard
       case 'industry_partner':  return '/industry';             // goes to industry portal
-      case 'community':         return '/explore';              // community voters browse challenges
+      case 'community':         return '/dashboard/community';  // dedicated community member dashboard
       default:                  return '/explore';
     }
   };
